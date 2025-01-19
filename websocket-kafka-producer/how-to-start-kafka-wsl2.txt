@@ -34,3 +34,9 @@ docker run --name kafka-schema-registry -e KAFKA_ADVERTISED_HOST_NAME=127.0.0.1 
 -e KAFKA_LISTENERS=PLAINTEXT://:9092,PLAINTEXT://:9094,PLAINTEXT://:9096
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,PLAINTEXT://localhost:9094,PLAINTEXT://localhost:9096
 -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT -p 8081:8081 bitnami/schema-registry
+
+
+-----------------------------------------------------------------------------
+
+cli command used for creating topic
+kafka-topics.sh --create --topic chat-room-topic --partitions=6 --replication-factor 3 --config min.insync.replicas=2 --bootstrap-server localhost:9092,localhost:9094,localhost:9096
