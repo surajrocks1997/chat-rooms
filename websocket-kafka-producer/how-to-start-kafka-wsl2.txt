@@ -1,0 +1,36 @@
+Commands for Starting Kafka : Start KAFKA in Windows WSL2 (without zookeeper)
+
+Link: https://learn.conduktor.io/kafka/how-to-install-apache-kafka-on-windows-without-zookeeper-kraft-mode/
+
+1. Generate a Random UUID using Kafka Storage
+kafka-storage.sh random-uuid
+
+this will generate a uuid similar to this: YfrPqAqNQe--ebuyQvWatg
+
+2. Register this uuid with server/s property/ies
+
+kafka-storage.sh format -t YfrPqAqNQe--ebuyQvWatg -c ~/kafka_2.13-3.7.0/config/kraft/server-1.properties
+kafka-storage.sh format -t YfrPqAqNQe--ebuyQvWatg -c ~/kafka_2.13-3.7.0/config/kraft/server-2.properties
+kafka-storage.sh format -t YfrPqAqNQe--ebuyQvWatg -c ~/kafka_2.13-3.7.0/config/kraft/server-3.properties
+
+3. run all 3 server
+
+kafka-server-start.sh ~/kafka_2.13-3.7.0/config/kraft/server-1.properties
+kafka-server-start.sh ~/kafka_2.13-3.7.0/config/kraft/server-2.properties
+kafka-server-start.sh ~/kafka_2.13-3.7.0/config/kraft/server-3.properties
+
+If running Application from windows like cmd, power shell or via java, you see node -1 disconnected, this is the networking issue in WSL2.
+Stop the Kafka server and then run belows commands
+
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+
+after doing this, connection should be successful
+
+
+kafka-schema-registry docker run command
+docker run --name kafka-schema-registry -e KAFKA_ADVERTISED_HOST_NAME=127.0.0.1 -e KAFKA_ADVERTISED_PORT=9092,9094,9096
+-e KAFKA_LISTENERS=PLAINTEXT://:9092,PLAINTEXT://:9094,PLAINTEXT://:9096
+-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,PLAINTEXT://localhost:9094,PLAINTEXT://localhost:9096
+-e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT -p 8081:8081 bitnami/schema-registry
