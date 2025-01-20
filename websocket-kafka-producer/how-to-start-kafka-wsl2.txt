@@ -40,3 +40,17 @@ docker run --name kafka-schema-registry -e KAFKA_ADVERTISED_HOST_NAME=127.0.0.1 
 
 cli command used for creating topic
 kafka-topics.sh --create --topic chat-room-topic --partitions=6 --replication-factor 3 --config min.insync.replicas=2 --bootstrap-server localhost:9092,localhost:9094,localhost:9096
+
+mysql wsl2 commands
+sudo service mysql start
+sudo service mysql stop
+to connect to mysql: sudo mysql -u root -p
+
+mongodb wsl2 commands
+sudo service mongod start
+sudo service mongod stop
+to connect to mongosh: mongosh -u root  -p --authenticationDatabase admin
+
+redis wsl2 commands
+sudo service redis-server start
+redis-cli

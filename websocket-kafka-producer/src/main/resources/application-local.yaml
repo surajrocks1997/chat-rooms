@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 8080
 
 spring:
   kafka:
@@ -8,7 +8,9 @@ spring:
       acks: all
 
 app:
+  jwtSecret: 61fa7f0ba87e49a5419f0c6a686d9f6191c649bb48d917b77e356298663a1d64
   cors:
-    allowed-origins: localhost:3000
+    allowed-origins: http://localhost:3000
   kafka:
     schema-registry-url: localhost:8081
+

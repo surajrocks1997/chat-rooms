@@ -9,5 +9,4 @@ public class WebsocketKafkaProducerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(WebsocketKafkaProducerApplication.class, args);
 	}
-
 }
