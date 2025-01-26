@@ -1,0 +1,6 @@
+app:
+  google-api:
+    host: oauth2.googleapis.com
+    clientId: ENC(jqTmTVlocjWR6tsqvtasNpGdVC4RYUD4j8fa/C2VIPYRZfan+dpKCWFfeaEc9r1tYaNPujI/L+jR2jYIMXhO2DfFRNzjX3D44Rp3lSrcelZjIc5qqKHdbmT2LZoXgisrAqox6XHOmMoz1KAIHW2qbg==)
+    clientSecret: ENC(8+dzMZ+iFwiXgD0SAo3fLUQ85GZUYNx/xP4HkaerI3AMVbdL6xKG4WxnZHz5HxFABx+8lCn21rnQ22eEtSt55Bf9W0p+sJSNvi0XE3BCNts=)
+    redirect_uri: http://localhost:3000
