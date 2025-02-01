@@ -1,7 +1,7 @@
 package com.chat_rooms.auth_handler.global;
 
 import com.chat_rooms.auth_handler.dto.ErrorResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,10 +11,11 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final String CORRELATION_ID_LOG_VAR_NAME = "correlationId";
 
     // for client specific errors
 //    @ExceptionHandler(HttpClientErrorException.BadRequest.class)
@@ -31,10 +32,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDatabaseException(DataAccessException ex, WebRequest request) {
+        String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .errorMessage("Database Error : " + ex.getMessage())
-                .correlationId(Objects.requireNonNullElse(request.getHeader("x-correlation-id"), "some-correlation-id"))
+                .correlationId(correlationId)
                 .timeStamp(LocalDateTime.now().toString())
                 .build();
 
@@ -43,11 +45,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NoHandlerFoundException ex, WebRequest request) {
+        String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .errorMessage("Not Found Exception : " + ex.getMessage())
                 .timeStamp(LocalDateTime.now().toString())
-                .correlationId(Objects.requireNonNullElse(request.getHeader("x-correlation-id"), "some-correlation-id"))
+                .correlationId(correlationId)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
@@ -55,11 +58,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex, WebRequest request) {
-
+        String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .errorMessage("Generic Exception : " + ex.getMessage())
-                .correlationId(Objects.requireNonNullElse(request.getHeader("x-correlation-id"), "some-correlation-id"))
+                .correlationId(correlationId)
                 .timeStamp(LocalDateTime.now().toString())
                 .build();
 

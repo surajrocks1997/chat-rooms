@@ -26,3 +26,7 @@ spring:
     show-sql: true
     properties:
       format_sql: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{correlationId}] %logger{36} - %msg%n"

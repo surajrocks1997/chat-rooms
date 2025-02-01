@@ -5,6 +5,7 @@ import com.chat_rooms.auth_handler.dto.GoogleTokenResponse;
 import com.chat_rooms.auth_handler.dto.GoogleUserInfo;
 import com.chat_rooms.auth_handler.utils.UriBuilderUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GoogleAuthService {
@@ -26,6 +28,7 @@ public class GoogleAuthService {
     private final GoogleConfigurationProperties googleConfigurationProperties;
 
     public GoogleTokenResponse getTokenDetail(String authCode) {
+        log.info("getTokenDetail flow started");
         String url = uriBuilderUtil.buildUrl(googleApiUriBuilder, "/token", null);
 
         HttpHeaders headers = new HttpHeaders();
@@ -47,6 +50,7 @@ public class GoogleAuthService {
     }
 
     public GoogleUserInfo getUserInfo(String accessToken) {
+        log.info("getUserInfo flow started");
         String url = UriComponentsBuilder.newInstance()
                 .scheme("https")
                 .host(getProfileHost)

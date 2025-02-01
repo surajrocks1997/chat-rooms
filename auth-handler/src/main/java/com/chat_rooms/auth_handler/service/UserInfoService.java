@@ -5,15 +5,18 @@ import com.chat_rooms.auth_handler.entity.AuthProvider;
 import com.chat_rooms.auth_handler.entity.UserInfo;
 import com.chat_rooms.auth_handler.repository.UserInfoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserInfoService {
 
     private final UserInfoRepository userInfoRepository;
 
     public Long saveGoogleUserToDb(GoogleUserInfo googleUserInfo) {
+        log.info("getTokenDetail flow started");
         UserInfo user = UserInfo.builder()
                 .firstName(googleUserInfo.getGivenName())
                 .lastName(googleUserInfo.getFamilyName())
