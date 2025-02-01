@@ -8,16 +8,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "app.google-api.auth")
+@ConfigurationProperties(prefix = "app.jwt")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class GoogleConfigurationProperties {
+public class JwtConfigProperties {
 
-    private String host;
-    private String clientId;
-    private String clientSecret;
-    private String redirect_uri;
-
+    private String secret;
+    private String aud;
+    private String iss;
 }

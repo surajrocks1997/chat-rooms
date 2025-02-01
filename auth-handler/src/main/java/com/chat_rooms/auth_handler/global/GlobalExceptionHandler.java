@@ -1,6 +1,8 @@
 package com.chat_rooms.auth_handler.global;
 
 import com.chat_rooms.auth_handler.dto.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -27,11 +29,23 @@ public class GlobalExceptionHandler {
 //        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 //    }
 
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDatabaseException(DataAccessException ex, WebRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .errorMessage("Database Error : " + ex.getMessage())
+                .correlationId(Objects.requireNonNullElse(request.getHeader("x-correlation-id"), "some-correlation-id"))
+                .timeStamp(LocalDateTime.now().toString())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NoHandlerFoundException ex, WebRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.NOT_FOUND.value())
-                .errorMessage(ex.getMessage())
+                .errorMessage("Not Found Exception : " + ex.getMessage())
                 .timeStamp(LocalDateTime.now().toString())
                 .correlationId(Objects.requireNonNullElse(request.getHeader("x-correlation-id"), "some-correlation-id"))
                 .build();
@@ -44,7 +58,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .errorMessage(ex.getMessage())
+                .errorMessage("Generic Exception : " + ex.getMessage())
                 .correlationId(Objects.requireNonNullElse(request.getHeader("x-correlation-id"), "some-correlation-id"))
                 .timeStamp(LocalDateTime.now().toString())
                 .build();

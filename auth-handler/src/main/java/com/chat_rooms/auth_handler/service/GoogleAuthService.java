@@ -2,8 +2,10 @@ package com.chat_rooms.auth_handler.service;
 
 import com.chat_rooms.auth_handler.config.GoogleConfigurationProperties;
 import com.chat_rooms.auth_handler.dto.GoogleTokenResponse;
+import com.chat_rooms.auth_handler.dto.GoogleUserInfo;
 import com.chat_rooms.auth_handler.utils.UriBuilderUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -14,6 +16,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 @RequiredArgsConstructor
 public class GoogleAuthService {
+
+    @Value("${app.google-api.host}")
+    private String getProfileHost;
 
     private final UriComponentsBuilder googleApiUriBuilder;
     private final RestTemplate restTemplate;
@@ -39,6 +44,20 @@ public class GoogleAuthService {
         ResponseEntity<GoogleTokenResponse> exchange = restTemplate.exchange(url, HttpMethod.POST, requestEntity, GoogleTokenResponse.class);
 
         return exchange.getBody();
+    }
 
+    public GoogleUserInfo getUserInfo(String accessToken) {
+        String url = UriComponentsBuilder.newInstance()
+                .scheme("https")
+                .host(getProfileHost)
+                .path("/oauth2/v2/userinfo")
+                .toUriString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        ResponseEntity<GoogleUserInfo> exchange = restTemplate.exchange(url, HttpMethod.GET, entity, GoogleUserInfo.class);
+        return exchange.getBody();
     }
 }
