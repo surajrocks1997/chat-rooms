@@ -1,16 +1,20 @@
 package com.chat_rooms.auth_handler.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.annotations.Type;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "UserInfo")
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Data
 public class UserInfo {
@@ -32,6 +36,9 @@ public class UserInfo {
 
     @Column(nullable = true)
     private String password;
+
+    @Column(nullable = true)
+    private String salt;
 
     @Column(nullable = false)
     private String authProvider;
@@ -61,6 +68,5 @@ public class UserInfo {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
 
 }

@@ -30,6 +30,20 @@ public class GlobalExceptionHandler {
 //        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 //    }
 
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex, WebRequest request){
+        String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(ex.getStatus().value())
+                .errorMessage(ex.getMessage())
+                .correlationId(correlationId)
+                .timeStamp(LocalDateTime.now().toString())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, ex.getStatus());
+
+    }
+
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDatabaseException(DataAccessException ex, WebRequest request) {
         String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
