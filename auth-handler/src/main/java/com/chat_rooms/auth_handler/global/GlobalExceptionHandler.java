@@ -11,6 +11,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -44,21 +45,24 @@ public class GlobalExceptionHandler {
 //    }
 
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex, WebRequest request) throws JsonProcessingException {
         String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(ex.getStatus().value())
-                .errorMessage(ex.getMessage())
+                .errorMessage("Custom Error: " + ex.getMessage())
                 .correlationId(correlationId)
                 .timeStamp(LocalDateTime.now().toString())
                 .build();
+
+        loggingUtil.logException(ex, correlationId);
+        loggingUtil.logStructuredMessage(errorResponse);
 
         return new ResponseEntity<>(errorResponse, ex.getStatus());
 
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<ErrorResponse> handleDatabaseException(DataAccessException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleDatabaseException(DataAccessException ex, WebRequest request) throws JsonProcessingException {
         String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -67,11 +71,14 @@ public class GlobalExceptionHandler {
                 .timeStamp(LocalDateTime.now().toString())
                 .build();
 
+        loggingUtil.logException(ex, correlationId);
+        loggingUtil.logStructuredMessage(errorResponse);
+
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(NoHandlerFoundException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NoHandlerFoundException ex, WebRequest request) throws JsonProcessingException {
         String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.NOT_FOUND.value())
@@ -80,12 +87,15 @@ public class GlobalExceptionHandler {
                 .correlationId(correlationId)
                 .build();
 
+        loggingUtil.logException(ex, correlationId);
+        loggingUtil.logStructuredMessage(errorResponse);
+
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleMethodNotImplementedException(HttpRequestMethodNotSupportedException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleMethodNotImplementedException(HttpRequestMethodNotSupportedException ex, WebRequest request) throws JsonProcessingException {
         String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
@@ -94,7 +104,26 @@ public class GlobalExceptionHandler {
                 .correlationId(correlationId)
                 .build();
 
+        loggingUtil.logException(ex, correlationId);
+        loggingUtil.logStructuredMessage(errorResponse);
+
         return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException ex, WebRequest request) throws JsonProcessingException {
+        String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
+                .errorMessage("Media Type Not Supported Exception : " + ex.getMessage())
+                .timeStamp(LocalDateTime.now().toString())
+                .correlationId(correlationId)
+                .build();
+
+        loggingUtil.logException(ex, correlationId);
+        loggingUtil.logStructuredMessage(errorResponse);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
