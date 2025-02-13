@@ -1,8 +1,10 @@
 package com.chat_rooms.websocket_kafka_producer.config;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
+import com.chat_rooms.websocket_kafka_producer.service.AuthServerService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -19,16 +21,18 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import java.security.Principal;
 import java.util.Objects;
 
 @Configuration
 @EnableWebSocketMessageBroker
 @Slf4j
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Autowired
     private Environment env;
+
+    private final AuthServerService authServerService;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -45,26 +49,25 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String token = Objects.requireNonNull(accessor.getNativeHeader("token")).getFirst();
+                    String bearerToken = Objects.requireNonNull(accessor.getNativeHeader("Authorization")).getFirst();
 
                     try {
-                        DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC256(Objects.requireNonNull(env.getProperty("app.jwtSecret"), "JWT Secret must not be null")))
-                                .withIssuer("the-elite-chat-rooms")
-                                .withAudience("chat-service")
-                                .build()
-                                .verify(token);
-
-//                        accessor.setUser();
-                    } catch (NullPointerException e) {
-                        throw new NullPointerException(e.getMessage());
+                        authServerService.validateToken(bearerToken);
                     } catch (Exception e) {
+                        log.error(e.getMessage());
                         throw new IllegalArgumentException("Invalid Token");
                     }
-                }
 
+                    DecodedJWT decodedJWT = JWT.decode(bearerToken.substring(7));
+
+                    UserRoleDetails userRoleDetails = new UserRoleDetails(decodedJWT.getSubject(), decodedJWT.getClaim("id").asLong());
+                    accessor.setUser(userRoleDetails);
+
+                }
 
                 return message;
             }
+
         });
     }
 
