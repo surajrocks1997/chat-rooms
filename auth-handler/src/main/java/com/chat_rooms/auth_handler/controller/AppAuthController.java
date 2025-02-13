@@ -4,6 +4,7 @@ import com.chat_rooms.auth_handler.dto.AppUser;
 import com.chat_rooms.auth_handler.dto.JWTResponse;
 import com.chat_rooms.auth_handler.service.JWTService;
 import com.chat_rooms.auth_handler.service.UserService;
+import com.chat_rooms.auth_handler.validation.ValidationGroup;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +30,8 @@ public class AppAuthController {
 
     //register user
     @PostMapping("/user")
-    public ResponseEntity<JWTResponse> registerUser(@Valid @RequestBody AppUser appUser, HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public ResponseEntity<JWTResponse> registerUser(@Validated(ValidationGroup.Register.class) @RequestBody AppUser appUser,
+                                                    HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
         log.info("registerUser flow started");
         long userId = userService.validateAndRegister(appUser);
 
@@ -40,7 +43,8 @@ public class AppAuthController {
 
     // login user
     @PostMapping
-    public ResponseEntity<JWTResponse> login(@Valid @RequestBody AppUser appUser, HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public ResponseEntity<JWTResponse> login(@Validated(ValidationGroup.Login.class) @RequestBody AppUser appUser,
+                                             HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
         log.info("login flow started");
         long userId = userService.validateLoginUser(appUser);
 
