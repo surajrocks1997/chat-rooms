@@ -6,6 +6,7 @@ import com.chat_rooms.auth_handler.service.JWTService;
 import com.chat_rooms.auth_handler.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class AppAuthController {
 
     //register user
     @PostMapping("/user")
-    public ResponseEntity<JWTResponse> registerUser(@RequestBody AppUser appUser, HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public ResponseEntity<JWTResponse> registerUser(@Valid @RequestBody AppUser appUser, HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
         log.info("registerUser flow started");
         long userId = userService.validateAndRegister(appUser);
 
@@ -39,7 +40,7 @@ public class AppAuthController {
 
     // login user
     @PostMapping
-    public ResponseEntity<JWTResponse> login(@RequestBody AppUser appUser, HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public ResponseEntity<JWTResponse> login(@Valid @RequestBody AppUser appUser, HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeySpecException {
         log.info("login flow started");
         long userId = userService.validateLoginUser(appUser);
 
