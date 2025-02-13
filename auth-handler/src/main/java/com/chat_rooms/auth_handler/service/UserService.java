@@ -18,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -92,6 +93,12 @@ public class UserService {
 
     public UserInfo findUserByEmail(String email) {
         return userInfoRepository.findByEmail(email);
+    }
+
+    public UserInfo findUserById(Long id) {
+        Optional<UserInfo> user = userInfoRepository.findById(id);
+        if (user.isEmpty()) throw new CustomException("No User Present with Given Id : " + id, HttpStatus.BAD_REQUEST);
+        return user.get();
     }
 
     public long validateAndRegister(AppUser appUser) throws NoSuchAlgorithmException, InvalidKeySpecException {

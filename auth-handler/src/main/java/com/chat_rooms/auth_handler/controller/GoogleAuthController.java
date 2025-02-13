@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/google")
+@RequestMapping("/api/google/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class GoogleAuthController {
@@ -27,7 +27,7 @@ public class GoogleAuthController {
     private final UserService userService;
     private final JWTService jwtService;
 
-    @GetMapping("/auth/token")
+    @GetMapping("/token")
     public ResponseEntity<JWTResponse> generateTokenAndLogin(HttpServletRequest request, HttpServletResponse response) {
         log.info("generateToken flow started");
         String authCode = request.getHeader("authCode");
@@ -43,7 +43,7 @@ public class GoogleAuthController {
         return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
     }
 
-    @GetMapping("/auth/refresh")
+    @GetMapping("/refresh")
     public ResponseEntity<JWTResponse> updateToken(@CookieValue(value = "refreshToken") String refreshToken, HttpServletResponse response) {
         // check if refresh token is valid or new SignIn required
         // if valid, generate new jwt and refresh token

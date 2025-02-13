@@ -7,7 +7,6 @@ import com.chat_rooms.auth_handler.service.UserService;
 import com.chat_rooms.auth_handler.validation.ValidationGroup;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -56,10 +54,10 @@ public class AppAuthController {
 
     // validate token
     @GetMapping("/validateToken")
-    public ResponseEntity<Map<String, String>> validateToken(HttpServletRequest request) {
+    public ResponseEntity<Void> validateToken(HttpServletRequest request) {
         log.info("validateToken flow started");
         String authorization = request.getHeader("Authorization");
-        String token = authorization.split(" ")[1];
+        String token = authorization.substring(7);
         jwtService.validateJWTToken(token);
 
         log.info("validateToken flow ended");
