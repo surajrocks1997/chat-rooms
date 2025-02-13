@@ -11,6 +11,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -80,6 +81,20 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotImplementedException(HttpRequestMethodNotSupportedException ex, WebRequest request) {
+        String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
+                .errorMessage("Method Not Supported Exception : " + ex.getMessage())
+                .timeStamp(LocalDateTime.now().toString())
+                .correlationId(correlationId)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
