@@ -50,6 +50,7 @@ public class AppAuthController {
         return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
     }
 
+    // validate token
     @GetMapping("/validateToken")
     public ResponseEntity<Map<String, String>> validateToken(HttpServletRequest request) {
         log.info("validateToken flow started");

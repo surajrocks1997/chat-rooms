@@ -93,7 +93,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotImplementedException(HttpRequestMethodNotSupportedException ex, WebRequest request) throws JsonProcessingException {
         String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
