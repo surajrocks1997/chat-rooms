@@ -88,11 +88,11 @@ public class UserService {
     }
 
     public boolean doesUserExist(String email) {
-        UserInfo user = findUserByEmail(email);
-        return user != null;
+        Optional<UserInfo> user = findUserByEmail(email);
+        return user.isPresent();
     }
 
-    public UserInfo findUserByEmail(String email) {
+    public Optional<UserInfo> findUserByEmail(String email) {
         return userInfoRepository.findByEmail(email);
     }
 
@@ -114,13 +114,13 @@ public class UserService {
     public long validateLoginUser(AppUser appUser) throws NoSuchAlgorithmException, InvalidKeySpecException {
         log.info("validateLoginUser flow started");
 
-        UserInfo user = findUserByEmail(appUser.getEmail());
+        Optional<UserInfo> user = findUserByEmail(appUser.getEmail());
 
-        if (user == null || !getHashedPassword(appUser.getPassword(), passwordUtils.decodeBase64(user.getSalt())).equals(user.getPassword()))
+        if (user.isEmpty() || !getHashedPassword(appUser.getPassword(), passwordUtils.decodeBase64(user.get().getSalt())).equals(user.get().getPassword()))
             throw new CustomException("Invalid Credentials", HttpStatus.BAD_REQUEST);
 
         log.info("validateLoginUser flow ended");
-        return user.getId();
+        return user.get().getId();
     }
 }
 
