@@ -37,6 +37,9 @@ public class UserInfo {
     private String password;
 
     @Column(nullable = true)
+    private String username;
+
+    @Column(nullable = true)
     private String salt;
 
     @Column(nullable = false)
@@ -60,6 +63,7 @@ public class UserInfo {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.username = this.email.substring(0, email.indexOf('@'));
         if (this.authProvider == null) this.authProvider = AuthProvider.LOCAL.getValue();
     }
 

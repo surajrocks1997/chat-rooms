@@ -49,10 +49,11 @@ public class UserService {
     public Long saveAppUserToDb(AppUser appUser) throws NoSuchAlgorithmException, InvalidKeySpecException {
         log.info("saveAppUserToDb flow started");
 
-        String[] name = appUser.getName().trim().split(" ");
+        String[] name = appUser.getName().trim().split("\\s+");
         StringBuilder lastName = new StringBuilder();
         for (int i = 1; i < name.length; i++) {
-            lastName.append(name[i]).append(" ");
+            if (i > 1) lastName.append(" ");
+            lastName.append(name[i]);
         }
 
         SecureRandom random = new SecureRandom();
