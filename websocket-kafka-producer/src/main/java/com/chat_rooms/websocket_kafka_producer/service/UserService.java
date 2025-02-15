@@ -1,5 +1,6 @@
 package com.chat_rooms.websocket_kafka_producer.service;
 
+import com.chat_rooms.websocket_kafka_producer.dto.UserInfoProjection;
 import com.chat_rooms.websocket_kafka_producer.entity.UserInfo;
 import com.chat_rooms.websocket_kafka_producer.global.CustomException;
 import com.chat_rooms.websocket_kafka_producer.repository.UserInfoRepository;
@@ -26,8 +27,8 @@ public class UserService {
         return userInfoRepository.findByEmail(email);
     }
 
-    public UserInfo findUserById(Long id) {
-        Optional<UserInfo> user = userInfoRepository.findById(id);
+    public UserInfoProjection findUserById(Long id) {
+        Optional<UserInfoProjection> user = userInfoRepository.findUserProjectionById(id);
         if (user.isEmpty()) throw new CustomException("No User Present with Given Id : " + id, HttpStatus.BAD_REQUEST);
         return user.get();
     }

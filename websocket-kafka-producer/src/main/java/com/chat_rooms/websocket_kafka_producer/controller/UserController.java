@@ -1,6 +1,6 @@
 package com.chat_rooms.websocket_kafka_producer.controller;
 
-import com.chat_rooms.websocket_kafka_producer.entity.UserInfo;
+import com.chat_rooms.websocket_kafka_producer.dto.UserInfoProjection;
 import com.chat_rooms.websocket_kafka_producer.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,10 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<UserInfo> getUser(HttpServletRequest request) {
+    public ResponseEntity<UserInfoProjection> getUser(HttpServletRequest request) {
         log.info("getUser flow started");
-        UserInfo user = userService.findUserById((Long) request.getAttribute("claimId"));
+        UserInfoProjection user = userService.findUserById((Long) request.getAttribute("claimId"));
+
 
         log.info("getUser flow ended");
         return new ResponseEntity<>(user, HttpStatus.OK);
