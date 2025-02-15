@@ -3,6 +3,7 @@ package com.chat_rooms.websocket_kafka_producer.global;
 import com.chat_rooms.websocket_kafka_producer.dto.ErrorResponse;
 import com.chat_rooms.websocket_kafka_producer.utils.LoggingUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -15,6 +16,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
@@ -143,6 +145,19 @@ public class GlobalExceptionHandler {
         loggingUtil.logStructuredMessage(errorResponse);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpStatusCodeException.class)
+    public ResponseEntity<ErrorResponse> handleAllExceptions(HttpStatusCodeException ex, WebRequest request) throws JsonProcessingException {
+        String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
+        ObjectMapper objectMapper = new ObjectMapper();
+        ErrorResponse errorResponse = objectMapper.readValue(ex.getResponseBodyAsString(), ErrorResponse.class);
+
+        loggingUtil.logException(ex, correlationId);
+        loggingUtil.logStructuredMessage(errorResponse);
+
+        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
+
     }
 
     @ExceptionHandler(Exception.class)

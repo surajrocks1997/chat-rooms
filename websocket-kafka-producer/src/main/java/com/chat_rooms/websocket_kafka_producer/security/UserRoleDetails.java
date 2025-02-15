@@ -1,9 +1,11 @@
 package com.chat_rooms.websocket_kafka_producer.security;
 
+import lombok.Data;
 import lombok.Getter;
 
 import java.security.Principal;
 
+@Data
 public class UserRoleDetails implements Principal {
     private final String sub;
     @Getter

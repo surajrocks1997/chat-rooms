@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -46,7 +47,7 @@ public class JWTFilter implements Filter {
                 throw new CustomException("Invalid Token", HttpStatus.UNAUTHORIZED);
 
             authServerService.validateToken(bearerToken);
-        } catch (Exception e) {
+        } catch (CustomException e) {
             String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
             ErrorResponse errorResponse = ErrorResponse.builder()
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
@@ -55,7 +56,22 @@ public class JWTFilter implements Filter {
                     .timeStamp(LocalDateTime.now().toString())
                     .build();
 
+            setCorsHeaders(res);
             res.setStatus(HttpStatus.UNAUTHORIZED.value());
+            res.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+
+            loggingUtil.logException(e, correlationId);
+            loggingUtil.logStructuredMessage(errorResponse);
+
+            return;
+
+        } catch (HttpStatusCodeException e) {
+            String correlationId = MDC.get(CORRELATION_ID_LOG_VAR_NAME);
+            ObjectMapper objectMapper = new ObjectMapper();
+            ErrorResponse errorResponse = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
+
+            setCorsHeaders(res);
+            res.setStatus(e.getStatusCode().value());
             res.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
 
             loggingUtil.logException(e, correlationId);
@@ -70,5 +86,13 @@ public class JWTFilter implements Filter {
 
         chain.doFilter(req, res);
         log.info("JWTFilter flow ended");
+    }
+
+    private void setCorsHeaders(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "authorization, content-type, xsrf-token");
+        response.addHeader("Access-Control-Expose-Headers", "xsrf-token");
     }
 }
