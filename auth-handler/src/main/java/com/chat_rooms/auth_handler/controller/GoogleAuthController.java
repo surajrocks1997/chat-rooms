@@ -5,7 +5,7 @@ import com.chat_rooms.auth_handler.dto.GoogleUserInfo;
 import com.chat_rooms.auth_handler.dto.JWTResponse;
 import com.chat_rooms.auth_handler.entity.UserInfo;
 import com.chat_rooms.auth_handler.service.GoogleAuthService;
-import com.chat_rooms.auth_handler.service.JWTService;
+import com.chat_rooms.auth_handler.service.TokenService;
 import com.chat_rooms.auth_handler.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,7 +29,7 @@ public class GoogleAuthController {
 
     private final GoogleAuthService googleAuthService;
     private final UserService userService;
-    private final JWTService jwtService;
+    private final TokenService tokenService;
 
     @GetMapping("/token")
     public ResponseEntity<JWTResponse> generateTokenAndLogin(HttpServletRequest request, HttpServletResponse response) {
@@ -43,7 +43,7 @@ public class GoogleAuthController {
         Optional<UserInfo> user = userService.findUserByEmail(userInfo.getEmail());
         Long userId = user.isEmpty() ? userService.saveGoogleUserToDb(userInfo) : user.get().getId();
 
-        JWTResponse jwtResponse = jwtService.getJwtResponse(response, userInfo.getEmail(), userId);
+        JWTResponse jwtResponse = tokenService.getJwtResponse(response, userInfo.getEmail(), userId);
 
         log.info("generateToken flow ended");
         return new ResponseEntity<>(jwtResponse, HttpStatus.OK);

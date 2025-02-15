@@ -12,6 +12,10 @@ import com.chat_rooms.auth_handler.utils.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +28,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class JWTService {
+public class TokenService {
 
     private final JwtConfigProperties jwtConfigProperties;
     private final CookieUtil cookieUtil;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    private static final String REFRESH_TOKEN_VAR_NAME = "refreshToken";
 
     public JWTResponse getJwtResponse(HttpServletResponse response, String email, Long userId) {
         log.info("getJwtResponse flow started");
@@ -40,7 +47,10 @@ public class JWTService {
                 .sign(Algorithm.HMAC256(jwtConfigProperties.getSecret()));
 
         String refreshToken = UUID.randomUUID().toString();
-        cookieUtil.create(response, "refreshToken", refreshToken, true, 8 * 60 * 60, "localhost");
+        int maxAgeInSeconds = (8 * 60 * 60);
+        storeRefreshToken(userId.toString(), refreshToken, maxAgeInSeconds);
+
+        cookieUtil.create(response, REFRESH_TOKEN_VAR_NAME, refreshToken, false, maxAgeInSeconds, "localhost");
 
         log.info("getJwtResponse flow ended");
         return JWTResponse.builder()
@@ -63,6 +73,27 @@ public class JWTService {
         } catch (JWTVerificationException e) {
             throw new CustomException("Token is Not Valid", HttpStatus.UNAUTHORIZED);
         }
+    }
 
+    private void storeRefreshToken(String userId, String refreshToken, int ttl) {
+        log.info("storeRefreshToken flow started");
+        HashOperations<String, Object, Object> ops = redisTemplate.opsForHash();
+        String key = "userId:" + userId;
+        ops.put(key, REFRESH_TOKEN_VAR_NAME, refreshToken);
+        redisTemplate.expire(key, Duration.ofSeconds(ttl));
+        log.info("storeRefreshToken flow ended");
+    }
+
+    public boolean verifyRefreshTokenValidity(String userId) {
+        log.info("verifyRefreshTokenValidity flow started");
+        HashOperations<String, Object, Object> ops = redisTemplate.opsForHash();
+        String key = "userId:" + userId;
+
+        String refreshToken = (String) ops.get(key, REFRESH_TOKEN_VAR_NAME);
+        if(refreshToken == null)
+            throw new CustomException("Refresh Token Expired! Please LogIn Again", HttpStatus.BAD_REQUEST);
+
+        log.info("verifyRefreshTokenValidity flow ended");
+        return true;
     }
 }

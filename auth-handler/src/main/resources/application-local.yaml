@@ -11,13 +11,13 @@ app:
       clientSecret: ENC(8+dzMZ+iFwiXgD0SAo3fLUQ85GZUYNx/xP4HkaerI3AMVbdL6xKG4WxnZHz5HxFABx+8lCn21rnQ22eEtSt55Bf9W0p+sJSNvi0XE3BCNts=)
       redirect_uri: http://localhost:3000
 
-
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/chat_rooms
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       naming:
@@ -26,6 +26,10 @@ spring:
     show-sql: true
     properties:
       format_sql: true
+
+  redis:
+    host: localhost
+    port: 6379
 
 logging:
   pattern:

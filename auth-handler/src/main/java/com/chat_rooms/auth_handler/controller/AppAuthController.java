@@ -1,8 +1,11 @@
 package com.chat_rooms.auth_handler.controller;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.chat_rooms.auth_handler.dto.AppUser;
 import com.chat_rooms.auth_handler.dto.JWTResponse;
-import com.chat_rooms.auth_handler.service.JWTService;
+import com.chat_rooms.auth_handler.service.TokenService;
 import com.chat_rooms.auth_handler.service.UserService;
 import com.chat_rooms.auth_handler.validation.ValidationGroup;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +27,8 @@ import java.security.spec.InvalidKeySpecException;
 public class AppAuthController {
 
     private final UserService userService;
-    private final JWTService jwtService;
+    private final TokenService tokenService;
+    private static final String AUTHORIZATION_HEADER_VAR_NAME = "Authorization";
 
     //register user
     @PostMapping("/user")
@@ -33,7 +37,7 @@ public class AppAuthController {
         log.info("registerUser flow started");
         long userId = userService.validateAndRegister(appUser);
 
-        JWTResponse jwtResponse = jwtService.getJwtResponse(response, appUser.getEmail(), userId);
+        JWTResponse jwtResponse = tokenService.getJwtResponse(response, appUser.getEmail(), userId);
 
         log.info("registerUser flow ended");
         return new ResponseEntity<>(jwtResponse, HttpStatus.CREATED);
@@ -46,7 +50,7 @@ public class AppAuthController {
         log.info("login flow started");
         long userId = userService.validateLoginUser(appUser);
 
-        JWTResponse jwtResponse = jwtService.getJwtResponse(response, appUser.getEmail(), userId);
+        JWTResponse jwtResponse = tokenService.getJwtResponse(response, appUser.getEmail(), userId);
         log.info("login flow ended");
 
         return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
@@ -56,11 +60,28 @@ public class AppAuthController {
     @GetMapping("/validateToken")
     public ResponseEntity<Void> validateToken(HttpServletRequest request) {
         log.info("validateToken flow started");
-        String authorization = request.getHeader("Authorization");
+        String authorization = request.getHeader(AUTHORIZATION_HEADER_VAR_NAME);
         String token = authorization.substring(7);
-        jwtService.validateJWTToken(token);
+        tokenService.validateJWTToken(token);
 
         log.info("validateToken flow ended");
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // refreshToken
+    @GetMapping("/refresh")
+    public ResponseEntity<JWTResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        log.info("refreshToken flow started");
+
+        JWTResponse jwtResponse = new JWTResponse();
+        String authorization = request.getHeader(AUTHORIZATION_HEADER_VAR_NAME);
+        DecodedJWT decode = JWT.decode(authorization.substring(7));
+        Claim id = decode.getClaim("id");
+        if (tokenService.verifyRefreshTokenValidity(String.valueOf(id))) {
+            jwtResponse = tokenService.getJwtResponse(response, decode.getSubject(), id.asLong());
+        }
+
+        log.info("refreshToken flow ended");
+        return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
     }
 }
