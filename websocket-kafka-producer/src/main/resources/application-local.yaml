@@ -16,6 +16,10 @@ spring:
     properties:
       format_sql: true
 
+  redis:
+    host: localhost
+    port: 6379
+
 app:
   cors:
     allowed-origins: http://localhost:3000
