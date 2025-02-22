@@ -17,6 +17,6 @@ public class CookieUtil {
 //        response.addCookie(cookie);
 
         String cookieValue = String.format("%s=%s; Max-Age=%d; Path=/; HttpOnly; SameSite=Lax", name, value, maxAge);
-        response.setHeader("Set-Cookie", cookieValue);
+        response.addHeader("Set-Cookie", cookieValue);
     }
 }
