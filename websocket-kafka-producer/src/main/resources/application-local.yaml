@@ -1,8 +1,6 @@
 spring:
   kafka:
     bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
-    producer:
-      acks: all
 
   datasource:
     url: jdbc:mysql://localhost:3306/chat_rooms
@@ -21,8 +19,8 @@ spring:
 app:
   cors:
     allowed-origins: http://localhost:3000
-  kafka:
-    schema-registry-url: localhost:8081
+#  kafka:
+#    schema-registry-url: localhost:8081
   auth-server:
     request:
       host: localhost
