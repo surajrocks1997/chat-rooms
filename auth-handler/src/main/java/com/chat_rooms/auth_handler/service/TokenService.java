@@ -12,10 +12,6 @@ import com.chat_rooms.auth_handler.utils.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +30,7 @@ public class TokenService {
     private final CookieUtil cookieUtil;
     private final RedisService redisService;
 
-    private static final String REFRESH_TOKEN_VAR_NAME = "refreshToken";
+    private static final String REFRESH_TOKEN_HASH_KEY = "refreshToken";
 
     public JWTResponse getJwtResponse(HttpServletResponse response, String email, Long userId) {
         log.info("getJwtResponse flow started");
@@ -50,7 +46,7 @@ public class TokenService {
         int maxAgeInSeconds = (8 * 60 * 60);
         storeRefreshToken(userId.toString(), refreshToken, maxAgeInSeconds);
 
-        cookieUtil.create(response, REFRESH_TOKEN_VAR_NAME, refreshToken, false, maxAgeInSeconds, "localhost");
+        cookieUtil.create(response, REFRESH_TOKEN_HASH_KEY, refreshToken, false, maxAgeInSeconds, "localhost");
 
         log.info("getJwtResponse flow ended");
         return JWTResponse.builder()
@@ -77,16 +73,16 @@ public class TokenService {
 
     private void storeRefreshToken(String userId, String refreshToken, int ttl) {
         log.info("storeRefreshToken flow started");
-        String key = "userId:" + userId;
-        redisService.putWithExpiry(key, REFRESH_TOKEN_VAR_NAME, refreshToken, ttl);
+        String key = "chatRooms:refreshToken:" + userId;
+        redisService.setWithExpiry(key, refreshToken, ttl);
         log.info("storeRefreshToken flow ended");
     }
 
     public boolean verifyRefreshTokenValidity(String userId) {
         log.info("verifyRefreshTokenValidity flow started");
-        String key = "userId:" + userId;
-        String refreshToken = redisService.get(key, REFRESH_TOKEN_VAR_NAME);
-        if(refreshToken == null)
+        String key = "chatRooms:refreshToken:" + userId;
+        String refreshToken = redisService.getValueOps(key);
+        if (refreshToken == null)
             throw new CustomException("Refresh Token Expired! Please LogIn Again", HttpStatus.BAD_REQUEST);
 
         log.info("verifyRefreshTokenValidity flow ended");

@@ -22,7 +22,7 @@ spring:
     hibernate:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-      ddl-auto: create-drop #update
+#      ddl-auto: create-drop #update
     show-sql: true
     properties:
       format_sql: true
