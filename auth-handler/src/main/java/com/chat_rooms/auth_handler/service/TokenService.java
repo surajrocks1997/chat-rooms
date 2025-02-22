@@ -32,7 +32,7 @@ public class TokenService {
 
     private final JwtConfigProperties jwtConfigProperties;
     private final CookieUtil cookieUtil;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisService redisService;
 
     private static final String REFRESH_TOKEN_VAR_NAME = "refreshToken";
 
@@ -77,19 +77,15 @@ public class TokenService {
 
     private void storeRefreshToken(String userId, String refreshToken, int ttl) {
         log.info("storeRefreshToken flow started");
-        HashOperations<String, Object, Object> ops = redisTemplate.opsForHash();
         String key = "userId:" + userId;
-        ops.put(key, REFRESH_TOKEN_VAR_NAME, refreshToken);
-        redisTemplate.expire(key, Duration.ofSeconds(ttl));
+        redisService.putWithExpiry(key, REFRESH_TOKEN_VAR_NAME, refreshToken, ttl);
         log.info("storeRefreshToken flow ended");
     }
 
     public boolean verifyRefreshTokenValidity(String userId) {
         log.info("verifyRefreshTokenValidity flow started");
-        HashOperations<String, Object, Object> ops = redisTemplate.opsForHash();
         String key = "userId:" + userId;
-
-        String refreshToken = (String) ops.get(key, REFRESH_TOKEN_VAR_NAME);
+        String refreshToken = redisService.get(key, REFRESH_TOKEN_VAR_NAME);
         if(refreshToken == null)
             throw new CustomException("Refresh Token Expired! Please LogIn Again", HttpStatus.BAD_REQUEST);
 
