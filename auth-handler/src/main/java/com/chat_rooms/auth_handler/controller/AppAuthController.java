@@ -72,6 +72,18 @@ public class AppAuthController {
     @GetMapping("/refresh")
     public ResponseEntity<JWTResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         log.info("refreshToken flow started");
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies.length == 0)
+//            throw new CustomException("No Cookie Present.", HttpStatus.BAD_REQUEST);
+
+//        int i = 0;
+//        while (i < cookies.length && !cookies[i].getName().equals("refreshToken")) {
+//            i++;
+//        }
+//        if (i == cookies.length)
+//            throw new CustomException("No Refresh Token Cookie Present.", HttpStatus.BAD_REQUEST);
+//
+//        String refreshTokenCookie = cookies[i].getValue();
 
         JWTResponse jwtResponse = new JWTResponse();
         String authorization = request.getHeader(AUTHORIZATION_HEADER_VAR_NAME);
@@ -80,6 +92,8 @@ public class AppAuthController {
         if (tokenService.verifyRefreshTokenValidity(String.valueOf(id))) {
             jwtResponse = tokenService.getJwtResponse(response, decode.getSubject(), id.asLong());
         }
+
+
 
         log.info("refreshToken flow ended");
         return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
