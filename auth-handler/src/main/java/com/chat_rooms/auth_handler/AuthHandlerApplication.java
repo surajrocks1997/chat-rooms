@@ -1,12 +1,13 @@
-package com.chat_rooms.websocket_kafka_producer;
+package com.chat_rooms.auth_handler;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class WebsocketKafkaProducerApplication {
+public class AuthHandlerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(WebsocketKafkaProducerApplication.class, args);
+		SpringApplication.run(AuthHandlerApplication.class, args);
 	}
+
 }

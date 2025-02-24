@@ -1,0 +1,52 @@
+{
+  "type": "record",
+  "namespace": "test",
+  "name": "User",
+  "fields": [
+    {
+      "name": "firstName",
+      "type": "string"
+    },
+    {
+      "name": "lastName",
+      "type": "string"
+    },
+    {
+      "name": "addresses",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "namespace": "test",
+          "name": "addresses",
+          "fields": [
+            {
+              "name": "street",
+              "type": "string"
+            },
+            {
+              "name": "address1",
+              "type": "string"
+            },
+            {
+              "name": "address2",
+              "type": "string"
+            },
+            {
+              "name": "city",
+              "type": "string"
+            },
+            {
+              "name": "state",
+              "type": "string"
+            },
+            {
+              "name": "pincode",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
