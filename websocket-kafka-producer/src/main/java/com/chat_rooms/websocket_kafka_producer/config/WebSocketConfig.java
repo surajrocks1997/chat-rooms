@@ -2,13 +2,17 @@ package com.chat_rooms.websocket_kafka_producer.config;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.chat_rooms.websocket_kafka_producer.eventListener.ServerInfoListener;
 import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
 import com.chat_rooms.websocket_kafka_producer.service.AuthServerService;
+import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
+import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -33,6 +37,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private Environment env;
 
     private final AuthServerService authServerService;
+    private final RedisService redisService;
+    private final JsonRedisService jsonRedisService;
+    private final ServerInfoListener serverInfoListener;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -44,31 +51,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new ChannelInterceptor() {
-            @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String bearerToken = Objects.requireNonNull(accessor.getNativeHeader("Authorization")).getFirst();
-
-                    try {
-                        authServerService.validateToken(bearerToken);
-                    } catch (Exception e) {
-                        log.error(e.getMessage());
-                        throw new IllegalArgumentException("Invalid Token");
-                    }
-
-                    DecodedJWT decodedJWT = JWT.decode(bearerToken.substring(7));
-
-                    UserRoleDetails userRoleDetails = new UserRoleDetails(decodedJWT.getSubject(), decodedJWT.getClaim("id").asLong());
-                    accessor.setUser(userRoleDetails);
-
-                }
-
-                return message;
-            }
-
-        });
+        registration.interceptors(new PresenceInterceptor(authServerService, redisService, jsonRedisService, serverInfoListener));
     }
 
     @Override

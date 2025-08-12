@@ -16,7 +16,7 @@ public class ActiveChatRooms {
     private final Map<String, Set<String>> chatRooms = new ConcurrentHashMap<>();
     private final KafkaConsumerService kafkaConsumerService;
 
-    public void addSubscriber(String chatRoomName, String sessionId) {
+    public void addSubscriber(String chatRoomName, String sessionId, String username, Long userId) {
         chatRooms.compute(chatRoomName, (name, sessions) -> {
             if (sessions == null) {
                 sessions = new CopyOnWriteArraySet<>();
@@ -27,7 +27,7 @@ public class ActiveChatRooms {
         });
     }
 
-    public void removeSubscriber(String chatRoomName, String sessionId) {
+    public void removeSubscriber(String chatRoomName, String sessionId, String username, Long userId) {
         chatRooms.computeIfPresent(chatRoomName, (name, sessions) -> {
             sessions.remove(sessionId);
             if (sessions.isEmpty()) {

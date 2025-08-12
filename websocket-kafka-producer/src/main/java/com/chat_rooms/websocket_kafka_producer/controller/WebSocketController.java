@@ -22,16 +22,18 @@ public class WebSocketController {
 
     @MessageMapping("/chatRoom/{chatRoomName}")
     public void getMessage(@Payload ChatRoomMessage message, @DestinationVariable String chatRoomName, SimpMessageHeaderAccessor headerAccessor) {
-        log.info("getMessage flow started");
+        log.info("WebSocket Controller MessageMapping getMessage flow started");
         UserRoleDetails user = (UserRoleDetails) headerAccessor.getUser();
         log.info(String.valueOf(user));
 
         switch (message.getMessageType()) {
-            case USER_ONLINE -> activeChatRooms.addSubscriber(message.getChatRoomName().getValue(), headerAccessor.getSessionId());
-            case USER_OFFLINE -> activeChatRooms.removeSubscriber(message.getChatRoomName().getValue(), headerAccessor.getSessionId());
+            case USER_ONLINE ->
+                    activeChatRooms.addSubscriber(message.getChatRoomName().getValue(), headerAccessor.getSessionId(), message.getUsername(), message.getUserId());
+            case USER_OFFLINE ->
+                    activeChatRooms.removeSubscriber(message.getChatRoomName().getValue(), headerAccessor.getSessionId(), message.getUsername(), message.getUserId());
         }
 
         kafkaProducerService.produceChatRoomMessage(message);
-        log.info("getMessage flow ended");
+        log.info("WebSocket Controller MessageMapping getMessage flow ended");
     }
 }
