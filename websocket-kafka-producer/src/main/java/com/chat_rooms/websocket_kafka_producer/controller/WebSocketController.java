@@ -1,6 +1,5 @@
 package com.chat_rooms.websocket_kafka_producer.controller;
 
-import com.chat_rooms.websocket_kafka_producer.component.ActiveChatRooms;
 import com.chat_rooms.websocket_kafka_producer.dto.ChatRoomMessage;
 import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaProducerService;
@@ -18,20 +17,12 @@ import org.springframework.stereotype.Controller;
 public class WebSocketController {
 
     private final KafkaProducerService kafkaProducerService;
-    private final ActiveChatRooms activeChatRooms;
 
     @MessageMapping("/chatRoom/{chatRoomName}")
     public void getMessage(@Payload ChatRoomMessage message, @DestinationVariable String chatRoomName, SimpMessageHeaderAccessor headerAccessor) {
         log.info("WebSocket Controller MessageMapping getMessage flow started");
         UserRoleDetails user = (UserRoleDetails) headerAccessor.getUser();
         log.info(String.valueOf(user));
-
-        switch (message.getMessageType()) {
-            case USER_ONLINE ->
-                    activeChatRooms.addSubscriber(message.getChatRoomName().getValue(), headerAccessor.getSessionId(), message.getUsername(), message.getUserId());
-            case USER_OFFLINE ->
-                    activeChatRooms.removeSubscriber(message.getChatRoomName().getValue(), headerAccessor.getSessionId(), message.getUsername(), message.getUserId());
-        }
 
         kafkaProducerService.produceChatRoomMessage(message);
         log.info("WebSocket Controller MessageMapping getMessage flow ended");

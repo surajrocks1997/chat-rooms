@@ -1,18 +1,12 @@
 package com.chat_rooms.websocket_kafka_producer.service;
 
-import com.chat_rooms.websocket_kafka_producer.component.ActiveChatRooms;
 import com.chat_rooms.websocket_kafka_producer.dto.ChatRoomMessage;
-import com.chat_rooms.websocket_kafka_producer.utils.LoggingUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.AcknowledgingMessageListener;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.MessageListener;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -35,12 +29,17 @@ public class KafkaConsumerService {
             containerProps.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
 
             ConcurrentMessageListenerContainer<String, ChatRoomMessage> container = new ConcurrentMessageListenerContainer<>(chatRoomEventConsumerFactory, containerProps);
-            container.setupMessageListener((MessageListener<String, ChatRoomMessage>) record ->
-                    subscriberService.sendToSubscriber(record.value(), record.value().getChatRoomName()));
+            container.setupMessageListener((AcknowledgingMessageListener<String, ChatRoomMessage>) (record, ack) -> {
+                try {
+                    subscriberService.sendToSubscriber(record.value(), record.value().getChatRoomName());
+                    ack.acknowledge();
+                } catch (Exception e) {
+                    log.error("Error processing message for chat room {}: {}", chatRoomName, e.getMessage(), e);
+                }
+            });
 
             container.setConcurrency(3);
             container.start();
-
             return container;
         });
     }

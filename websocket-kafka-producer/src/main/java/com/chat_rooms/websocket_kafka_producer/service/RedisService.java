@@ -1,11 +1,13 @@
 package com.chat_rooms.websocket_kafka_producer.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
 @Service
+@Slf4j
 public class RedisService {
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -70,5 +72,10 @@ public class RedisService {
 
     public void removeFromSet(String key, String value) {
         setOps.remove(key, value);
+    }
+
+    public boolean isSetEmpty(String key) {
+        log.info("RedisService: Size Of Key: {} = {}", key, setOps.size(key));
+        return setOps.size(key) == 0;
     }
 }

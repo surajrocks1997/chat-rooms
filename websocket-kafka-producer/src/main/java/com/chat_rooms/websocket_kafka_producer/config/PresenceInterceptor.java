@@ -2,15 +2,18 @@ package com.chat_rooms.websocket_kafka_producer.config;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.chat_rooms.websocket_kafka_producer.dto.RoomPresenceChangedEvent;
 import com.chat_rooms.websocket_kafka_producer.dto.UserMetadata;
 import com.chat_rooms.websocket_kafka_producer.eventListener.ServerInfoListener;
 import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
 import com.chat_rooms.websocket_kafka_producer.service.AuthServerService;
 import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
+import com.chat_rooms.websocket_kafka_producer.service.KafkaConsumerService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -27,6 +30,7 @@ public class PresenceInterceptor implements ChannelInterceptor {
     private final RedisService redisService;
     private final JsonRedisService jsonRedisService;
     private final ServerInfoListener serverInfoListener;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -36,6 +40,7 @@ public class PresenceInterceptor implements ChannelInterceptor {
 
         switch (accessor.getCommand()) {
             case CONNECT:
+                log.info("preSend: CONNECT Command: Started");
                 String bearerToken = accessor.getNativeHeader("Authorization") != null ? accessor.getNativeHeader("Authorization").getFirst() : null;
                 if (bearerToken != null) {
                     try {
@@ -61,44 +66,60 @@ public class PresenceInterceptor implements ChannelInterceptor {
                 addPresenceWithUserIdToSessionIdToRedis(sessionId, user.getId());
 
                 log.info("From Presence Interceptor CONNECT Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
+                log.info("preSend: CONNECT Command: Ended");
                 break;
 
             case CONNECTED:
+                log.info("preSend: CONNECTED Command: Started");
                 log.info("From Presence Interceptor CONNECTED Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
+                log.info("preSend: CONNECTED Command: Ended");
                 break;
 
             case DISCONNECT:
+                log.info("preSend: DISCONNECT Command: Started");
                 removePresenceWithSessionToUserMetadataFromRedis(sessionId);
                 removePresenceWithUserIdToSessionFromRedis(sessionId, user);
-                removePresenceWithSessionIdToChatRoomFromRedis(sessionId);
-                removePresenceWithChatRoomToSessionIdFromRedis(accessor.getSubscriptionId(), sessionId);
+                unsubscribeCleanUp(accessor, sessionId);
 
                 log.info("From Presence Interceptor DISCONNECT Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
+                log.info("preSend: DISCONNECT Command: Ended");
                 break;
 
             case SUBSCRIBE:
-                addPresenceWithSessionToUserMetadataToRedis(sessionId, user);
+                log.info("preSend: SUBSCRIBE Command: Started");
+                eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessor.getSubscriptionId(), true));
+
                 addPresenceWithSessionIdToChatRoomToRedis(sessionId, accessor.getSubscriptionId());
                 addPresenceWithChatRoomToSessionIdToRedis(accessor.getSubscriptionId(), sessionId);
 
+
                 log.info("From Presence Interceptor SUBSCRIBE Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
+                log.info("preSend: SUBSCRIBE Command: Ended");
                 break;
 
             case UNSUBSCRIBE:
-                removePresenceWithSessionIdToChatRoomFromRedis(sessionId);
-                removePresenceWithChatRoomToSessionIdFromRedis(accessor.getSubscriptionId(), sessionId);
+                log.info("preSend: UNSUBSCRIBE Command: Started");
+                unsubscribeCleanUp(accessor, sessionId);
 
                 log.info("From Presence Interceptor UNSUBSCRIBE Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
+                log.info("preSend: UNSUBSCRIBE Command: Ended");
                 break;
 
             default:
-
+                log.info("preSend: OTHER Command: Started");
                 log.info("From Presence Interceptor OTHER Command : {}. SessionId: {}, UserId: {}", accessor.getCommand(), sessionId, user != null ? user.getId() : "Anonymous");
+                log.info("preSend: OTHER Command: Ended");
                 break;
         }
 
 
         return message;
+    }
+
+    private void unsubscribeCleanUp(StompHeaderAccessor accessor, String sessionId) {
+        removePresenceWithSessionIdToChatRoomFromRedis(sessionId);
+        removePresenceWithChatRoomToSessionIdFromRedis(accessor.getSubscriptionId(), sessionId);
+        eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessor.getSubscriptionId(), false));
     }
 
     private void removePresenceWithChatRoomToSessionIdFromRedis(String roomId, String sessionId) {
