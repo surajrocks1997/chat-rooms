@@ -36,6 +36,7 @@ public class KafkaRoomListenerManager {
         log.info("KafkaRoomListenerManager: Received RoomPresenceChangedEvent for room: {}", room);
         UserMetadata userMetadata = jsonRedisService.get(RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + event.sessionId(), UserMetadata.class);
         if (event.hasJoined()) {
+            // If the user has joined the room, produce a USER_ONLINE message
             kafkaProducerService.produceChatRoomMessage(
                     ChatRoomMessage
                             .builder()
@@ -53,6 +54,7 @@ public class KafkaRoomListenerManager {
                 log.info("KafkaRoomListenerManager: Started Kafka listener for room: {}", room);
             }
         } else {
+            // If the user has left the room, produce a USER_OFFLINE message
             kafkaProducerService.produceChatRoomMessage(
                     ChatRoomMessage
                             .builder()
