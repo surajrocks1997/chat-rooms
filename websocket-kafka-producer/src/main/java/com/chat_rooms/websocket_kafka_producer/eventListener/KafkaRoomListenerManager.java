@@ -1,9 +1,12 @@
 package com.chat_rooms.websocket_kafka_producer.eventListener;
 
-import com.chat_rooms.websocket_kafka_producer.dto.RoomPresenceChangedEvent;
+import com.chat_rooms.websocket_kafka_producer.dto.*;
+import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaConsumerService;
+import com.chat_rooms.websocket_kafka_producer.service.KafkaProducerService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +20,9 @@ import java.util.concurrent.*;
 @Slf4j
 public class KafkaRoomListenerManager {
     private final KafkaConsumerService kafkaConsumerService;
+    private final KafkaProducerService kafkaProducerService;
     private final RedisService redisService;
+    private final JsonRedisService jsonRedisService;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final ConcurrentMap<String, ScheduledFuture<?>> pendingStops = new ConcurrentHashMap<>();
@@ -26,10 +31,20 @@ public class KafkaRoomListenerManager {
 
     // Listens for room presence changes and manages Kafka listeners accordingly
     @EventListener
-    public void onRoomPresenceChanged(RoomPresenceChangedEvent event) {
+    public void onRoomPresenceChanged(RoomPresenceChangedEvent event) throws JsonProcessingException {
         String room = event.room();
         log.info("KafkaRoomListenerManager: Received RoomPresenceChangedEvent for room: {}", room);
-        if (event.hasSomeoneJoined()) {
+        UserMetadata userMetadata = jsonRedisService.get(RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + event.sessionId(), UserMetadata.class);
+        if (event.hasJoined()) {
+            kafkaProducerService.produceChatRoomMessage(
+                    ChatRoomMessage
+                            .builder()
+                            .messageType(MessageType.USER_ONLINE)
+                            .username(userMetadata.getEmail())
+                            .chatRoomName(ChatRoomName.valueOf(event.room()))
+                            .build()
+            );
+            log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: USER_ONLINE : Sent");
             ScheduledFuture<?> pending = pendingStops.remove(room);
             if (pending != null) pending.cancel(false);
 
@@ -38,7 +53,16 @@ public class KafkaRoomListenerManager {
                 log.info("KafkaRoomListenerManager: Started Kafka listener for room: {}", room);
             }
         } else {
-            if(room == null || room.isEmpty()) {
+            kafkaProducerService.produceChatRoomMessage(
+                    ChatRoomMessage
+                            .builder()
+                            .messageType(MessageType.USER_OFFLINE)
+                            .username(userMetadata.getEmail())
+                            .chatRoomName(ChatRoomName.valueOf(event.room()))
+                            .build()
+            );
+            log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: USER_OFFLINE : Sent");
+            if (room == null || room.isEmpty()) {
                 log.warn("KafkaRoomListenerManager: Received empty room name in RoomPresenceChangedEvent");
                 return;
             }

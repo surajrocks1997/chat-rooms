@@ -11,6 +11,7 @@ import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaConsumerService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -64,7 +65,12 @@ public class PresenceInterceptor implements ChannelInterceptor {
 
                 user = (UserRoleDetails) accessor.getUser();
 
-                addPresenceWithSessionToUserMetadataToRedis(sessionId, user);
+                try {
+                    addPresenceWithSessionToUserMetadataToRedis(sessionId, user);
+                } catch (JsonProcessingException e) {
+                    log.error("preSend: CONNECT Command: Error while adding presence with session to user metadata in Redis: {}", e.getMessage());
+                    throw new RuntimeException(e);
+                }
                 addPresenceWithUserIdToSessionIdToRedis(sessionId, user.getId());
 
                 log.info("From Presence Interceptor CONNECT Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
@@ -79,7 +85,7 @@ public class PresenceInterceptor implements ChannelInterceptor {
 
             case SUBSCRIBE:
                 log.info("preSend: SUBSCRIBE Command: Started");
-                eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessor.getSubscriptionId(), true));
+                eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessor.getSubscriptionId(), sessionId, true));
 
                 addPresenceWithSessionIdToChatRoomToRedis(sessionId, accessor.getSubscriptionId());
                 addPresenceWithChatRoomToSessionIdToRedis(accessor.getSubscriptionId(), sessionId);
@@ -124,7 +130,7 @@ public class PresenceInterceptor implements ChannelInterceptor {
         removePresenceWithChatRoomToSessionIdFromRedis(room, sessionId);
         removePresenceWithSessionIdToChatRoomFromRedis(sessionId);
 
-        eventPublisher.publishEvent(new RoomPresenceChangedEvent(room, false));
+        eventPublisher.publishEvent(new RoomPresenceChangedEvent(room, sessionId, false));
     }
 
     private void removePresenceWithChatRoomToSessionIdFromRedis(String roomId, String sessionId) {
@@ -155,7 +161,7 @@ public class PresenceInterceptor implements ChannelInterceptor {
         jsonRedisService.delete(RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId);
     }
 
-    private void addPresenceWithSessionToUserMetadataToRedis(String sessionId, UserRoleDetails user) {
+    private void addPresenceWithSessionToUserMetadataToRedis(String sessionId, UserRoleDetails user) throws JsonProcessingException {
         jsonRedisService.set(
                 RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId,
                 UserMetadata.builder()
