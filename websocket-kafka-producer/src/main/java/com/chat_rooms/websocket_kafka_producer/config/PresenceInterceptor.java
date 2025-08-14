@@ -21,6 +21,8 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -75,16 +77,6 @@ public class PresenceInterceptor implements ChannelInterceptor {
                 log.info("preSend: CONNECTED Command: Ended");
                 break;
 
-            case DISCONNECT:
-                log.info("preSend: DISCONNECT Command: Started");
-                removePresenceWithSessionToUserMetadataFromRedis(sessionId);
-                removePresenceWithUserIdToSessionFromRedis(sessionId, user);
-                unsubscribeCleanUp(accessor, sessionId);
-
-                log.info("From Presence Interceptor DISCONNECT Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
-                log.info("preSend: DISCONNECT Command: Ended");
-                break;
-
             case SUBSCRIBE:
                 log.info("preSend: SUBSCRIBE Command: Started");
                 eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessor.getSubscriptionId(), true));
@@ -99,10 +91,22 @@ public class PresenceInterceptor implements ChannelInterceptor {
 
             case UNSUBSCRIBE:
                 log.info("preSend: UNSUBSCRIBE Command: Started");
-                unsubscribeCleanUp(accessor, sessionId);
+                unsubscribeCleanUp(redisService.get(RedisKeys.PRESENCE_SESSION_TO_ROOM + sessionId), sessionId);
 
                 log.info("From Presence Interceptor UNSUBSCRIBE Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
                 log.info("preSend: UNSUBSCRIBE Command: Ended");
+                break;
+
+            case DISCONNECT:
+                log.info("preSend: DISCONNECT Command: Started");
+                String room = redisService.get(RedisKeys.PRESENCE_SESSION_TO_ROOM + sessionId);
+                if (room != null)
+                    unsubscribeCleanUp(room, sessionId);
+
+                removePresenceWithSessionToUserMetadataFromRedis(sessionId);
+                removePresenceWithUserIdToSessionFromRedis(sessionId, user);
+                log.info("From Presence Interceptor DISCONNECT Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
+                log.info("preSend: DISCONNECT Command: Ended");
                 break;
 
             default:
@@ -116,10 +120,11 @@ public class PresenceInterceptor implements ChannelInterceptor {
         return message;
     }
 
-    private void unsubscribeCleanUp(StompHeaderAccessor accessor, String sessionId) {
+    private void unsubscribeCleanUp(String room, String sessionId) {
+        removePresenceWithChatRoomToSessionIdFromRedis(room, sessionId);
         removePresenceWithSessionIdToChatRoomFromRedis(sessionId);
-        removePresenceWithChatRoomToSessionIdFromRedis(accessor.getSubscriptionId(), sessionId);
-        eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessor.getSubscriptionId(), false));
+
+        eventPublisher.publishEvent(new RoomPresenceChangedEvent(room, false));
     }
 
     private void removePresenceWithChatRoomToSessionIdFromRedis(String roomId, String sessionId) {

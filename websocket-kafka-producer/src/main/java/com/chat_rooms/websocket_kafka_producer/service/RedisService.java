@@ -38,6 +38,10 @@ public class RedisService {
         valueOps.set(key, value);
     }
 
+    public String get(String key) {
+        return valueOps.get(key);
+    }
+
     public void put(String key, String hashKey, String value) {
         hashOps.put(key, hashKey, value);
     }
