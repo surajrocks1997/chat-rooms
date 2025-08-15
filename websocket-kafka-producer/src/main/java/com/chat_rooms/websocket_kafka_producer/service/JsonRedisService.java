@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 
 @Service
 public class JsonRedisService {
@@ -21,7 +22,7 @@ public class JsonRedisService {
     }
 
     public void set(String key, Object value) throws JsonProcessingException {
-        String json =  objectMapper.writeValueAsString(value);
+        String json = objectMapper.writeValueAsString(value);
         valueOps.set(key, json);
     }
 
@@ -31,8 +32,20 @@ public class JsonRedisService {
     }
 
     public void setWithExpiry(String key, Object value, int ttlInSeconds) throws JsonProcessingException {
-        String json =  objectMapper.writeValueAsString(value);
+        String json = objectMapper.writeValueAsString(value);
         valueOps.set(key, json, Duration.ofSeconds(ttlInSeconds));
+    }
+
+    public <T> List<T> getAll(List<String> keys, Class<T> classType) {
+        List<String> jsonStrings = valueOps.multiGet(keys);
+        assert jsonStrings != null;
+        return jsonStrings.stream().map((json) -> {
+            try {
+                return objectMapper.readValue(json, classType);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }).toList();
     }
 
     public void delete(String key) {

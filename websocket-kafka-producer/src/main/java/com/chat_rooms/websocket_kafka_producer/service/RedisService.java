@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -76,6 +77,11 @@ public class RedisService {
 
     public void removeFromSet(String key, String value) {
         setOps.remove(key, value);
+    }
+
+    // get all Values from setOps
+    public Set<String> getSetValues(String key){
+        return setOps.members(key);
     }
 
     public boolean isSetEmpty(String key) {
