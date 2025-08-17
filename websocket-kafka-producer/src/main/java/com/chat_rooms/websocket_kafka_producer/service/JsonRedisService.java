@@ -14,11 +14,12 @@ public class JsonRedisService {
 
     private final RedisTemplate<String, String> redisJsonTemplate;
     private final ValueOperations<String, String> valueOps;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public JsonRedisService(RedisTemplate<String, String> redisJsonTemplate) {
+    public JsonRedisService(RedisTemplate<String, String> redisJsonTemplate, ObjectMapper objectMapper) {
         this.redisJsonTemplate = redisJsonTemplate;
         this.valueOps = redisJsonTemplate.opsForValue();
+        this.objectMapper = objectMapper;
     }
 
     public void set(String key, Object value) throws JsonProcessingException {
@@ -50,5 +51,9 @@ public class JsonRedisService {
 
     public void delete(String key) {
         redisJsonTemplate.delete(key);
+    }
+
+    public void publish(String channel, Object message) throws JsonProcessingException {
+        redisJsonTemplate.convertAndSend(channel, objectMapper.writeValueAsString(message));
     }
 }

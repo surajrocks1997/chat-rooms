@@ -28,4 +28,8 @@ public class ServerInfoListener implements ApplicationListener<ServletWebServerI
 
         log.info("{}:{}", this.getHostName(), this.getPort());
     }
+
+    public String getServerInfo() {
+        return this.getHostName() + ":" + this.getPort();
+    }
 }

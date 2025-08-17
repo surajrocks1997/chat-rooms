@@ -1,6 +1,7 @@
 package com.chat_rooms.websocket_kafka_producer.service;
 
 import com.chat_rooms.websocket_kafka_producer.dto.ChatRoomMessage;
+import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.ConsumerFactory;
@@ -18,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class KafkaConsumerService {
 
     private final WebSocketSubscriberService subscriberService;
+    private final JsonRedisService jsonRedisService;
 
     private final ConsumerFactory<String, ChatRoomMessage> chatRoomEventConsumerFactory;
     private final Map<String, ConcurrentMessageListenerContainer<String, ChatRoomMessage>> listenerContainers = new ConcurrentHashMap<>();
@@ -31,8 +33,9 @@ public class KafkaConsumerService {
             ConcurrentMessageListenerContainer<String, ChatRoomMessage> container = new ConcurrentMessageListenerContainer<>(chatRoomEventConsumerFactory, containerProps);
             container.setupMessageListener((AcknowledgingMessageListener<String, ChatRoomMessage>) (record, ack) -> {
                 try {
-                    subscriberService.sendToSubscriber(record.value(), record.value().getChatRoomName());
+                    jsonRedisService.publish(RedisKeys.BASE + record.value().getChatRoomName().getValue(), record.value());
                     ack.acknowledge();
+
                 } catch (Exception e) {
                     log.error("Error processing message for chat room {}: {}", chatRoomName, e.getMessage(), e);
                 }

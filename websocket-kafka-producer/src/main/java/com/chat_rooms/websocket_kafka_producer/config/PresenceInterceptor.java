@@ -2,13 +2,13 @@ package com.chat_rooms.websocket_kafka_producer.config;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.chat_rooms.websocket_kafka_producer.dto.RedisSubscriberChangedEvent;
 import com.chat_rooms.websocket_kafka_producer.dto.RoomPresenceChangedEvent;
 import com.chat_rooms.websocket_kafka_producer.dto.UserMetadata;
 import com.chat_rooms.websocket_kafka_producer.eventListener.ServerInfoListener;
 import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
 import com.chat_rooms.websocket_kafka_producer.service.AuthServerService;
 import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
-import com.chat_rooms.websocket_kafka_producer.service.KafkaConsumerService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,8 +21,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 @Component
 @Slf4j
@@ -85,10 +83,12 @@ public class PresenceInterceptor implements ChannelInterceptor {
 
             case SUBSCRIBE:
                 log.info("preSend: SUBSCRIBE Command: Started");
-                eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessor.getSubscriptionId(), sessionId, true));
+                String accessorSubscriptionId = accessor.getSubscriptionId();
+                eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessorSubscriptionId, sessionId, true));
+                eventPublisher.publishEvent(new RedisSubscriberChangedEvent(accessorSubscriptionId, true));
 
-                addPresenceWithSessionIdToChatRoomToRedis(sessionId, accessor.getSubscriptionId());
-                addPresenceWithChatRoomToSessionIdToRedis(accessor.getSubscriptionId(), sessionId);
+                addPresenceWithSessionIdToChatRoomToRedis(sessionId, accessorSubscriptionId);
+                addPresenceWithChatRoomToSessionIdToRedis(accessorSubscriptionId, sessionId);
 
 
                 log.info("From Presence Interceptor SUBSCRIBE Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
@@ -97,6 +97,7 @@ public class PresenceInterceptor implements ChannelInterceptor {
 
             case UNSUBSCRIBE:
                 log.info("preSend: UNSUBSCRIBE Command: Started");
+
                 unsubscribeCleanUp(redisService.get(RedisKeys.PRESENCE_SESSION_TO_ROOM + sessionId), sessionId);
 
                 log.info("From Presence Interceptor UNSUBSCRIBE Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
@@ -106,8 +107,9 @@ public class PresenceInterceptor implements ChannelInterceptor {
             case DISCONNECT:
                 log.info("preSend: DISCONNECT Command: Started");
                 String room = redisService.get(RedisKeys.PRESENCE_SESSION_TO_ROOM + sessionId);
-                if (room != null)
+                if (room != null) {
                     unsubscribeCleanUp(room, sessionId);
+                }
 
                 removePresenceWithSessionToUserMetadataFromRedis(sessionId);
                 removePresenceWithUserIdToSessionFromRedis(sessionId, user);
@@ -127,6 +129,8 @@ public class PresenceInterceptor implements ChannelInterceptor {
     }
 
     private void unsubscribeCleanUp(String room, String sessionId) {
+        eventPublisher.publishEvent(new RedisSubscriberChangedEvent(room, false));
+
         removePresenceWithChatRoomToSessionIdFromRedis(room, sessionId);
         removePresenceWithSessionIdToChatRoomFromRedis(sessionId);
 
