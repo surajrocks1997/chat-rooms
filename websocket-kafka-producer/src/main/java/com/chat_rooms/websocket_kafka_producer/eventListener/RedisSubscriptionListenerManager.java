@@ -4,7 +4,7 @@ import com.chat_rooms.websocket_kafka_producer.dto.RedisSubscriberChangedEvent;
 import com.chat_rooms.websocket_kafka_producer.dto.UserMetadata;
 import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
-import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
+import com.chat_rooms.websocket_kafka_producer.utils.RedisKeys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

@@ -1,4 +1,4 @@
-package com.chat_rooms.websocket_kafka_producer.utility;
+package com.chat_rooms.websocket_kafka_producer.utils;
 
 public final class RedisKeys {
     public static final String BASE = "chatRooms:";

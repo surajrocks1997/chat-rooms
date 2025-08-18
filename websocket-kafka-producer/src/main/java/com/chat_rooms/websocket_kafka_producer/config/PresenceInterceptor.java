@@ -10,7 +10,7 @@ import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
 import com.chat_rooms.websocket_kafka_producer.service.AuthServerService;
 import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
-import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
+import com.chat_rooms.websocket_kafka_producer.utils.RedisKeys;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

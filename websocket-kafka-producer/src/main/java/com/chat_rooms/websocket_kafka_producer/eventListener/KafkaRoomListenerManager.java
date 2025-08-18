@@ -5,7 +5,7 @@ import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaConsumerService;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaProducerService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
-import com.chat_rooms.websocket_kafka_producer.utility.RedisKeys;
+import com.chat_rooms.websocket_kafka_producer.utils.RedisKeys;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.concurrent.*;
 @RequiredArgsConstructor
 @Slf4j
 public class KafkaRoomListenerManager {
-    private final KafkaConsumerService kafkaConsumerService;
+//    private final KafkaConsumerService kafkaConsumerService;
     private final KafkaProducerService kafkaProducerService;
     private final RedisService redisService;
     private final JsonRedisService jsonRedisService;
@@ -49,10 +49,10 @@ public class KafkaRoomListenerManager {
             ScheduledFuture<?> pending = pendingStops.remove(room);
             if (pending != null) pending.cancel(false);
 
-            if (!kafkaConsumerService.isListenerRunning(room)) {
-                kafkaConsumerService.startListener(room);
-                log.info("KafkaRoomListenerManager: Started Kafka listener for room: {}", room);
-            }
+//            if (!kafkaConsumerService.isListenerRunning(room)) {
+//                kafkaConsumerService.startListener(room);
+//                log.info("KafkaRoomListenerManager: Started Kafka listener for room: {}", room);
+//            }
         } else {
             // If the user has left the room, produce a USER_OFFLINE message
             kafkaProducerService.produceChatRoomMessage(
@@ -64,32 +64,32 @@ public class KafkaRoomListenerManager {
                             .build()
             );
             log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: USER_OFFLINE : Sent");
-            if (room == null || room.isEmpty()) {
-                log.warn("KafkaRoomListenerManager: Received empty room name in RoomPresenceChangedEvent");
-                return;
-            }
-            if (pendingStops.containsKey(room)) {
-                log.info("KafkaRoomListenerManager: Room {} is already scheduled for stop", room);
-                return;
-            }
-
-            ScheduledFuture<?> scheduledFuture = scheduler.schedule(() -> {
-                try {
-                    if (redisService.isSetEmpty(RedisKeys.PRESENCE_ROOM_TO_SESSION + room) && kafkaConsumerService.isListenerRunning(room)) {
-                        log.info("KafkaRoomListenerManager: Stopping Kafka listener for room: {}", room);
-                        kafkaConsumerService.stopListener(room);
-                        log.info("KafkaRoomListenerManager: Stopped Kafka listener for room: {}", room);
-                    } else {
-                        log.info("KafkaRoomListenerManager: Room {} is not empty, skipping stop", room);
-                    }
-                } finally {
-                    pendingStops.remove(room);
-                    log.info("KafkaRoomListenerManager: pendingStops Cleanup completed for room: {}", room);
-                }
-            }, STOP_DEBOUNCE, TimeUnit.SECONDS);
-
-            pendingStops.put(room, scheduledFuture);
-            log.info("KafkaRoomListenerManager: Scheduled stop for room: {} in {} seconds", room, STOP_DEBOUNCE);
+//            if (room == null || room.isEmpty()) {
+//                log.warn("KafkaRoomListenerManager: Received empty room name in RoomPresenceChangedEvent");
+//                return;
+//            }
+//            if (pendingStops.containsKey(room)) {
+//                log.info("KafkaRoomListenerManager: Room {} is already scheduled for stop", room);
+//                return;
+//            }
+//
+//            ScheduledFuture<?> scheduledFuture = scheduler.schedule(() -> {
+//                try {
+//                    if (redisService.isSetEmpty(RedisKeys.PRESENCE_ROOM_TO_SESSION + room) && kafkaConsumerService.isListenerRunning(room)) {
+//                        log.info("KafkaRoomListenerManager: Stopping Kafka listener for room: {}", room);
+//                        kafkaConsumerService.stopListener(room);
+//                        log.info("KafkaRoomListenerManager: Stopped Kafka listener for room: {}", room);
+//                    } else {
+//                        log.info("KafkaRoomListenerManager: Room {} is not empty, skipping stop", room);
+//                    }
+//                } finally {
+//                    pendingStops.remove(room);
+//                    log.info("KafkaRoomListenerManager: pendingStops Cleanup completed for room: {}", room);
+//                }
+//            }, STOP_DEBOUNCE, TimeUnit.SECONDS);
+//
+//            pendingStops.put(room, scheduledFuture);
+//            log.info("KafkaRoomListenerManager: Scheduled stop for room: {} in {} seconds", room, STOP_DEBOUNCE);
         }
     }
 
