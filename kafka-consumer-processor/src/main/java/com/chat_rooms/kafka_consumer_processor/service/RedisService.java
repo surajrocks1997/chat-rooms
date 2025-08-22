@@ -1,11 +1,10 @@
-package com.chat_rooms.websocket_kafka_producer.service;
+package com.chat_rooms.kafka_consumer_processor.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Set;
 
 @Service

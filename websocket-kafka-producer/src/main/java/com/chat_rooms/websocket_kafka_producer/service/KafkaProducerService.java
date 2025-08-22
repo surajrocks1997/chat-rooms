@@ -12,15 +12,17 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProducerService {
+public class KafkaProducerService {
 
-    private final KafkaTemplate<String, ChatRoomMessage> userEventKafkaTemplate;
+    private final KafkaTemplate<String, ChatRoomMessage> chatRoomEventKafkaTemplate;
 
-    public void produceChatRoomMessage(ChatRoomMessage chatRoomMessage) {
-        CompletableFuture<SendResult<String, ChatRoomMessage>> send = userEventKafkaTemplate.send("chat-room-topic", chatRoomMessage.getChatRoomName().getValue(), chatRoomMessage);
+    public void produceChatRoomMessage(ChatRoomMessage chatRoomMessage, String topic) {
+        CompletableFuture<SendResult<String, ChatRoomMessage>> send = chatRoomEventKafkaTemplate.send(topic, chatRoomMessage);
         send.whenComplete((res, ex) -> {
-            if (ex != null)
+            if (ex != null) {
                 log.error("Failed To Send Message: {}", ex.getMessage());
+            }
         });
+
     }
 }

@@ -19,6 +19,7 @@ kafka-server-start.sh ~/kafka_2.13-3.7.0/config/kraft/server-1.properties
 kafka-server-start.sh ~/kafka_2.13-3.7.0/config/kraft/server-2.properties
 kafka-server-start.sh ~/kafka_2.13-3.7.0/config/kraft/server-3.properties
 
+-----------------------------------------------------------------------------
 If running Application from windows like cmd, power shell or via java, you see node -1 disconnected, this is the networking issue in WSL2.
 Stop the Kafka server and then run belows commands
 
@@ -35,11 +36,12 @@ docker run --name kafka-schema-registry -e KAFKA_ADVERTISED_HOST_NAME=127.0.0.1 
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,PLAINTEXT://localhost:9094,PLAINTEXT://localhost:9096
 -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT -p 8081:8081 bitnami/schema-registry
 
-
 -----------------------------------------------------------------------------
 
 cli command used for creating topic
 kafka-topics.sh --create --topic chat-room-topic --partitions=6 --replication-factor 3 --config min.insync.replicas=2 --bootstrap-server localhost:9092,localhost:9094,localhost:9096
+
+-----------------------------------------------------------------------------
 
 mysql wsl2 commands
 sudo service mysql start
@@ -54,3 +56,31 @@ to connect to mongosh: mongosh -u root  -p --authenticationDatabase admin
 redis wsl2 commands
 sudo service redis-server start
 redis-cli
+
+-----------------------------------------------------------------------------
+
+nginx setup
+
+copy latest react build to /var/www/chat-app/build
+sudo cp -r /mnt/d/Productivity/Code/vs-code-workspaces/chat-rooms-kafka-frontend/build/* /var/www/chat-app/build/
+
+to view nginx server configuration file
+sudo cat /etc/nginx/sites-available/app.conf
+
+to test the syntax and validity of your Nginx configuration files
+sudo nginx -t
+
+to see the symbolic link between sites-available and sites-enabled
+ls -l /etc/nginx/sites-enabled/
+
+to start or reload nginx
+sudo systemctl start nginx
+sudo systemctl reload nginx
+sudo systemctl restart nginx
+sudo systemctl stop nginx
+
+-----------------------------------------------------------------------------
+
+nrok server start
+
+ngrok http 80

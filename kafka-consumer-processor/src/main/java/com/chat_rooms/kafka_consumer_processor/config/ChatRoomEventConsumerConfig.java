@@ -26,7 +26,7 @@ import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
-public class UserEventConsumerConfig {
+public class ChatRoomEventConsumerConfig {
 
     @Autowired
     private Environment env;
@@ -34,25 +34,24 @@ public class UserEventConsumerConfig {
     private final KafkaTemplate<String, Object> deadLetterEventKafkaTemplate;
 
     @Bean
-    public DefaultKafkaConsumerFactory<String, ChatRoomMessage> userEventConsumerFactory() {
+    public ConsumerFactory<String, ChatRoomMessage> chatRoomEventConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.getProperty("spring.kafka.bootstrap-servers"));
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "user-event-consumer-group");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-//        props.put(JsonDeserializer.TYPE_MAPPINGS, "chatRoomMessage:com.chat_rooms.kafka_consumer_processor.dto.ChatRoomMessage");
         props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.chat_rooms.kafka_consumer_processor.dto.ChatRoomMessage");
+        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.chat_rooms.websocket_kafka_producer.dto.ChatRoomMessage");
 
         JsonDeserializer<ChatRoomMessage> deserializer = new JsonDeserializer<>(ChatRoomMessage.class);
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, ChatRoomMessage> userEventKafkaListenerContainerFactory(ConsumerFactory<String, ChatRoomMessage> userEventConsumerFactory) {
+    public ConcurrentKafkaListenerContainerFactory<String, ChatRoomMessage> chatRoomEventListenerContainerFactory(ConsumerFactory<String, ChatRoomMessage> chatRoomEventConsumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, ChatRoomMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(userEventConsumerFactory);
+        factory.setConsumerFactory(chatRoomEventConsumerFactory);
+        factory.setAutoStartup(true);
         factory.setCommonErrorHandler(defaultErrorHandler());
         return factory;
     }
