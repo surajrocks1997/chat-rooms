@@ -2,7 +2,6 @@ package com.chat_rooms.websocket_kafka_producer.eventListener;
 
 import com.chat_rooms.websocket_kafka_producer.dto.*;
 import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
-import com.chat_rooms.websocket_kafka_producer.service.KafkaConsumerService;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaProducerService;
 import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import com.chat_rooms.websocket_kafka_producer.utils.RedisKeys;
@@ -19,7 +18,7 @@ import java.util.concurrent.*;
 @RequiredArgsConstructor
 @Slf4j
 public class KafkaRoomListenerManager {
-//    private final KafkaConsumerService kafkaConsumerService;
+    //    private final KafkaConsumerService kafkaConsumerService;
     private final KafkaProducerService kafkaProducerService;
     private final RedisService redisService;
     private final JsonRedisService jsonRedisService;
@@ -43,16 +42,25 @@ public class KafkaRoomListenerManager {
                             .messageType(MessageType.USER_ONLINE)
                             .username(userMetadata.getEmail())
                             .chatRoomName(ChatRoomName.valueOf(event.room()))
-                            .build()
+                            .build(),
+                    "chat-room-topic-" + event.room()
             );
             log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: USER_ONLINE : Sent");
             ScheduledFuture<?> pending = pendingStops.remove(room);
             if (pending != null) pending.cancel(false);
 
-//            if (!kafkaConsumerService.isListenerRunning(room)) {
-//                kafkaConsumerService.startListener(room);
-//                log.info("KafkaRoomListenerManager: Started Kafka listener for room: {}", room);
-//            }
+            // produce a message to kafka to dynamically start listener if not already started
+            kafkaProducerService.produceChatRoomMessage(
+                    ChatRoomMessage
+                            .builder()
+                            .messageType(MessageType.START_LISTENER)
+                            .chatRoomName(ChatRoomName.valueOf(event.room()))
+                            .username("system")
+                            .build(),
+                    "chat-room-topic-room-update"
+            );
+            log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: START_LISTENER : Sent");
+
         } else {
             // If the user has left the room, produce a USER_OFFLINE message
             kafkaProducerService.produceChatRoomMessage(
@@ -61,35 +69,21 @@ public class KafkaRoomListenerManager {
                             .messageType(MessageType.USER_OFFLINE)
                             .username(userMetadata.getEmail())
                             .chatRoomName(ChatRoomName.valueOf(event.room()))
-                            .build()
+                            .build(),
+                    "chat-room-topic-" + event.room()
             );
             log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: USER_OFFLINE : Sent");
-//            if (room == null || room.isEmpty()) {
-//                log.warn("KafkaRoomListenerManager: Received empty room name in RoomPresenceChangedEvent");
-//                return;
-//            }
-//            if (pendingStops.containsKey(room)) {
-//                log.info("KafkaRoomListenerManager: Room {} is already scheduled for stop", room);
-//                return;
-//            }
-//
-//            ScheduledFuture<?> scheduledFuture = scheduler.schedule(() -> {
-//                try {
-//                    if (redisService.isSetEmpty(RedisKeys.PRESENCE_ROOM_TO_SESSION + room) && kafkaConsumerService.isListenerRunning(room)) {
-//                        log.info("KafkaRoomListenerManager: Stopping Kafka listener for room: {}", room);
-//                        kafkaConsumerService.stopListener(room);
-//                        log.info("KafkaRoomListenerManager: Stopped Kafka listener for room: {}", room);
-//                    } else {
-//                        log.info("KafkaRoomListenerManager: Room {} is not empty, skipping stop", room);
-//                    }
-//                } finally {
-//                    pendingStops.remove(room);
-//                    log.info("KafkaRoomListenerManager: pendingStops Cleanup completed for room: {}", room);
-//                }
-//            }, STOP_DEBOUNCE, TimeUnit.SECONDS);
-//
-//            pendingStops.put(room, scheduledFuture);
-//            log.info("KafkaRoomListenerManager: Scheduled stop for room: {} in {} seconds", room, STOP_DEBOUNCE);
+
+            kafkaProducerService.produceChatRoomMessage(
+                    ChatRoomMessage
+                            .builder()
+                            .messageType(MessageType.STOP_LISTENER)
+                            .chatRoomName(ChatRoomName.valueOf(event.room()))
+                            .username("system")
+                            .build(),
+                    "chat-room-topic-room-update"
+            );
+            log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: STOP_LISTENER : Sent");
         }
     }
 

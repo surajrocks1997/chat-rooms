@@ -129,9 +129,8 @@ public class PresenceInterceptor implements ChannelInterceptor {
     }
 
     private void unsubscribeCleanUp(String room, String sessionId) {
-        eventPublisher.publishEvent(new RedisSubscriberChangedEvent(room, false));
-
         removePresenceWithChatRoomToSessionIdFromRedis(room, sessionId);
+        eventPublisher.publishEvent(new RedisSubscriberChangedEvent(room, false));
         removePresenceWithSessionIdToChatRoomFromRedis(sessionId);
 
         eventPublisher.publishEvent(new RoomPresenceChangedEvent(room, sessionId, false));

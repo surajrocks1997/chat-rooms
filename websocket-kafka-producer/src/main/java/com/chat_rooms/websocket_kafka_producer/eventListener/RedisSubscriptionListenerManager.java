@@ -13,6 +13,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -37,13 +38,15 @@ public class RedisSubscriptionListenerManager {
 
             // check if there are any users in the same server connected to this room
             // if not, remove the subscription
+            List<UserMetadata> userMetadataList = new ArrayList<>();
             List<String> sessionIds = redisService.getSetValues(RedisKeys.PRESENCE_ROOM_TO_SESSION + event.room()).stream().toList();
-            List<String> keys = sessionIds.stream().map((sessionId) -> RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId).toList();
-            List<UserMetadata> userMetadataList = jsonRedisService.getAll(keys, UserMetadata.class);
-            userMetadataList = userMetadataList
-                    .stream()
-                    .filter((userMetadata) -> userMetadata.getConnectedToServer().equals(serverInfoListener.getServerInfo()))
-                    .toList();
+            if (!sessionIds.isEmpty()) {
+                List<String> keys = sessionIds.stream().map((sessionId) -> RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId).toList();
+                userMetadataList = jsonRedisService.getAll(keys, UserMetadata.class)
+                        .stream()
+                        .filter((userMetadata) -> userMetadata.getConnectedToServer().equals(serverInfoListener.getServerInfo()))
+                        .toList();
+            }
 
 
             if (redisService.getSetValues(RedisKeys.PRESENCE_ROOM_TO_SESSION + event.room()).isEmpty() || userMetadataList.isEmpty()) {

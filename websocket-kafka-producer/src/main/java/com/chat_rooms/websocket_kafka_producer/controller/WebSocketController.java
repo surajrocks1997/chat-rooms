@@ -24,7 +24,7 @@ public class WebSocketController {
         UserRoleDetails user = (UserRoleDetails) headerAccessor.getUser();
         log.info(String.valueOf(user));
 
-        kafkaProducerService.produceChatRoomMessage(message);
+        kafkaProducerService.produceChatRoomMessage(message, "chat-room-topic-" + message.getChatRoomName().getValue());
         log.info("WebSocket Controller MessageMapping getMessage flow ended");
     }
 }

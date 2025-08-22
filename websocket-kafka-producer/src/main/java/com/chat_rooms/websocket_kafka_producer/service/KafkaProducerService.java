@@ -16,15 +16,13 @@ public class KafkaProducerService {
 
     private final KafkaTemplate<String, ChatRoomMessage> chatRoomEventKafkaTemplate;
 
-    public void produceChatRoomMessage(ChatRoomMessage chatRoomMessage) {
-        CompletableFuture<SendResult<String, ChatRoomMessage>> send = chatRoomEventKafkaTemplate.send(
-                "chat-room-topic-" + chatRoomMessage.getChatRoomName().getValue(),
-                chatRoomMessage.getUsername(),
-                chatRoomMessage);
-
+    public void produceChatRoomMessage(ChatRoomMessage chatRoomMessage, String topic) {
+        CompletableFuture<SendResult<String, ChatRoomMessage>> send = chatRoomEventKafkaTemplate.send(topic, chatRoomMessage);
         send.whenComplete((res, ex) -> {
-            if (ex != null)
+            if (ex != null) {
                 log.error("Failed To Send Message: {}", ex.getMessage());
+            }
         });
+
     }
 }
