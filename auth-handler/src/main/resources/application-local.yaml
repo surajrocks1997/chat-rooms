@@ -1,6 +1,6 @@
 app:
   cors:
-    allowed-origins: http://localhost:3000,http://192.168.1.2:3000
+    allowed-origins: http://localhost:3000,http://192.168.1.2:3000,http://127.0.0.1
   jwt:
     secret: ENC(hzyJMZWhIyoKIOW28ATJSil5YgR0H8y5zPR1ixFK+noTi7OSXrclkHVE1xe9SzCrdrqrJpwlRsxf5IoYhg3Hjvu5f4dadiOKDMvknSVgmB1CQxPIRkEgrH5xh8jNjuuLen40TZCoU/3taRfDKzWNDg==)
     iss: the-elite-chat-rooms
