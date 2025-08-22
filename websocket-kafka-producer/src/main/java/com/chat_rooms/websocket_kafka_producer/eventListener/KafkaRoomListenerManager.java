@@ -3,7 +3,6 @@ package com.chat_rooms.websocket_kafka_producer.eventListener;
 import com.chat_rooms.websocket_kafka_producer.dto.*;
 import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaProducerService;
-import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import com.chat_rooms.websocket_kafka_producer.utils.RedisKeys;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.annotation.PreDestroy;
@@ -18,15 +17,8 @@ import java.util.concurrent.*;
 @RequiredArgsConstructor
 @Slf4j
 public class KafkaRoomListenerManager {
-    //    private final KafkaConsumerService kafkaConsumerService;
     private final KafkaProducerService kafkaProducerService;
-    private final RedisService redisService;
     private final JsonRedisService jsonRedisService;
-
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final ConcurrentMap<String, ScheduledFuture<?>> pendingStops = new ConcurrentHashMap<>();
-
-    private static final Long STOP_DEBOUNCE = 5L;
 
     // Listens for room presence changes and manages Kafka listeners accordingly
     @EventListener
@@ -46,8 +38,6 @@ public class KafkaRoomListenerManager {
                     "chat-room-topic-" + event.room()
             );
             log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: USER_ONLINE : Sent");
-            ScheduledFuture<?> pending = pendingStops.remove(room);
-            if (pending != null) pending.cancel(false);
 
             // produce a message to kafka to dynamically start listener if not already started
             kafkaProducerService.produceChatRoomMessage(
@@ -86,12 +76,4 @@ public class KafkaRoomListenerManager {
             log.info("KafkaRoomListenerManager: KafkaProducer : Message Type: STOP_LISTENER : Sent");
         }
     }
-
-    // Shuts down the scheduler when the application context is destroyed
-    @PreDestroy
-    public void shutDown() {
-        scheduler.shutdownNow();
-    }
-
-
 }
