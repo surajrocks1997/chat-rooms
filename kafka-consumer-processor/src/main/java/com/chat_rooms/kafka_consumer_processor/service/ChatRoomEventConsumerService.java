@@ -3,6 +3,7 @@ package com.chat_rooms.kafka_consumer_processor.service;
 import com.chat_rooms.kafka_consumer_processor.dto.ChatRoomMessage;
 import com.chat_rooms.kafka_consumer_processor.dto.MessageType;
 import com.chat_rooms.kafka_consumer_processor.utils.RedisKeys;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -62,5 +63,11 @@ public class ChatRoomEventConsumerService {
             toBeStopped.put(room, scheduledFuture);
             log.info("KafkaRoomListenerManager: Scheduled stop for room: {} in {} seconds", room, STOP_DEBOUNCE);
         }
+    }
+
+    // Shuts down the scheduler when the application context is destroyed
+    @PreDestroy
+    public void shutDown() {
+        scheduler.shutdownNow();
     }
 }
