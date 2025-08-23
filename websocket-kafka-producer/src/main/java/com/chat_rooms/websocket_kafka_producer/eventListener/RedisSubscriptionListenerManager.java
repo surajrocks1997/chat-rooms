@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 @Component
 @RequiredArgsConstructor
@@ -27,37 +28,61 @@ public class RedisSubscriptionListenerManager {
     private final JsonRedisService jsonRedisService;
     private final ServerInfoListener serverInfoListener;
 
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ConcurrentMap<String, ScheduledFuture<?>> toBeStopped = new ConcurrentHashMap<>();
+
+    private static final Long STOP_DEBOUNCE = 10L;
+
+
     @EventListener
     public void onRedisSubscriptionChanged(RedisSubscriberChangedEvent event) {
+        String room = RedisKeys.PRESENCE_ROOM_TO_SESSION + event.room();
         if (event.hasSubscribed()) {
             log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Adding", event.room());
+
+            ScheduledFuture<?> remove = toBeStopped.remove(room);
+            if (remove != null) {
+                log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Cancelling scheduled stop", event.room());
+                remove.cancel(false);
+            }
+
             redisMessageListenerContainer.addMessageListener(messageListener, new ChannelTopic(RedisKeys.BASE + event.room()));
             log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Added", event.room());
+
         } else {
             log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Removing", event.room());
 
-            // check if there are any users in the same server connected to this room
-            // if not, remove the subscription
-            List<UserMetadata> userMetadataList = new ArrayList<>();
-            List<String> sessionIds = redisService.getSetValues(RedisKeys.PRESENCE_ROOM_TO_SESSION + event.room()).stream().toList();
-            if (!sessionIds.isEmpty()) {
-                List<String> keys = sessionIds.stream().map((sessionId) -> RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId).toList();
-                userMetadataList = jsonRedisService.getAll(keys, UserMetadata.class)
-                        .stream()
-                        .filter((userMetadata) -> userMetadata.getConnectedToServer().equals(serverInfoListener.getServerInfo()))
-                        .toList();
-            }
+            ScheduledFuture<?> scheduledFuture = scheduler.schedule(() -> {
+                // check if there are any users in the same server connected to this room
+                // if not, remove the subscription
+                try {
+                    List<UserMetadata> userMetadataList = new ArrayList<>();
+                    List<String> sessionIds = redisService.getSetValues(room).stream().toList();
+                    if (!sessionIds.isEmpty()) {
+                        List<String> keys = sessionIds.stream().map((sessionId) -> RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId).toList();
+                        userMetadataList = jsonRedisService.getAll(keys, UserMetadata.class)
+                                .stream()
+                                .filter((userMetadata) -> userMetadata.getConnectedToServer().equals(serverInfoListener.getServerInfo()))
+                                .toList();
+                    }
+                    if (redisService.getSetValues(room).isEmpty() || userMetadataList.isEmpty()) {
 
+                        redisMessageListenerContainer.removeMessageListener(messageListener, new ChannelTopic(RedisKeys.BASE + event.room()));
+                        log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Removed", event.room());
+                    } else {
+                        log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Could Not Remove. Room on this Server {} is not empty",
+                                serverInfoListener.getServerInfo(),
+                                event.room());
+                    }
+                } finally {
+                    toBeStopped.remove(room);
+                    log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : toBeStopped Cleanup completed", event.room());
+                }
 
-            if (redisService.getSetValues(RedisKeys.PRESENCE_ROOM_TO_SESSION + event.room()).isEmpty() || userMetadataList.isEmpty()) {
+            }, STOP_DEBOUNCE, TimeUnit.SECONDS);
 
-                redisMessageListenerContainer.removeMessageListener(messageListener, new ChannelTopic(RedisKeys.BASE + event.room()));
-                log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Removed", event.room());
-            } else {
-                log.info("RedisSubscriptionListenerManager: Subscription for Redis Topic room: {} : Could Not Remove. Room on this Server {} is not empty",
-                        serverInfoListener.getServerInfo(),
-                        event.room());
-            }
+            toBeStopped.put(room, scheduledFuture);
+
         }
 
     }
