@@ -32,6 +32,7 @@ public class DynamicTopicListenerService {
             container.setupMessageListener((AcknowledgingMessageListener<String, ChatRoomMessage>) (record, ack) -> {
                 try {
                     jsonRedisService.publish(RedisKeys.BASE + record.value().getChatRoomName().getValue(), record.value());
+                    log.info("DynamicTopicListenerService: Processed message for chat room {}: {}", chatRoomName, record.value());
                     ack.acknowledge();
 
                 } catch (Exception e) {
@@ -48,8 +49,10 @@ public class DynamicTopicListenerService {
 
     public void stopListener(String chatRoomName) {
         ConcurrentMessageListenerContainer<String, ChatRoomMessage> container = listenerContainers.remove(chatRoomName);
-        if (container != null)
+        if (container != null) {
             container.stop();
+            container.destroy();
+        }
     }
 
     public boolean isListenerRunning(String chatRoomName) {

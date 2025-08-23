@@ -24,18 +24,24 @@ public class ChatRoomEventConsumerService {
 
     private static final Long STOP_DEBOUNCE = 10L;
 
-    @KafkaListener(topicPattern = "chat-room-topic-room-update", groupId = "chat-room-consumer", containerFactory = "chatRoomEventListenerContainerFactory")
+    @KafkaListener(topics = "chat-room-topic-room-update", groupId = "chat-room-consumer-room-update", containerFactory = "chatRoomEventListenerContainerFactory")
     public void listen(ConsumerRecord<String, ChatRoomMessage> record) {
         MessageType messageType = record.value().getMessageType();
         String room = record.value().getChatRoomName().getValue();
+        log.info("chat-room-topic-room-update received. Message Type: {}", messageType);
 
         if (MessageType.START_LISTENER.equals(messageType)) {
+            log.info("ChatRoomEventConsumerService: Checking if there are any pending stops for room: {}", room);
             ScheduledFuture<?> pending = toBeStopped.remove(room);
 
-            if (pending != null)
+            if (pending != null) {
+                log.info("ChatRoomEventConsumerService: Cancelling scheduled stop for {}", room);
                 pending.cancel(false);
+                log.info("ChatRoomEventConsumerService: Removed any pending scheduled future");
+            }
 
             if (!dynamicTopicListenerService.isListenerRunning(room)) {
+                log.info("ChatRoomEventConsumerService: Starting Kafka listener for room: {}", room);
                 dynamicTopicListenerService.startListener(room);
                 log.info("ChatRoomEventConsumerService: Started Kafka listener for room: {}", room);
             }
@@ -61,7 +67,7 @@ public class ChatRoomEventConsumerService {
             }, STOP_DEBOUNCE, TimeUnit.SECONDS);
 
             toBeStopped.put(room, scheduledFuture);
-            log.info("KafkaRoomListenerManager: Scheduled stop for room: {} in {} seconds", room, STOP_DEBOUNCE);
+            log.info("ChatRoomEventConsumerService: Scheduled stop for room: {} in {} seconds", room, STOP_DEBOUNCE);
         }
     }
 
