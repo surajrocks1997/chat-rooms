@@ -7,6 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.chat_rooms.auth_handler.config.JwtConfigProperties;
 import com.chat_rooms.auth_handler.dto.JWTResponse;
+import com.chat_rooms.auth_handler.dto.UserInfoUsernameProjection;
 import com.chat_rooms.auth_handler.global.CustomException;
 import com.chat_rooms.auth_handler.utils.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,16 +30,19 @@ public class TokenService {
     private final JwtConfigProperties jwtConfigProperties;
     private final CookieUtil cookieUtil;
     private final RedisService redisService;
+    private final UserService userService;
 
     private static final String REFRESH_TOKEN_HASH_KEY = "refreshToken";
 
-    public JWTResponse getJwtResponse(HttpServletResponse response, String email, Long userId) {
+    public JWTResponse getJwtResponse(HttpServletResponse response, Long userId) {
         log.info("getJwtResponse flow started");
+        UserInfoUsernameProjection usernameProjection = userService.findUsernameById(userId).orElseThrow(
+                () -> new CustomException("User with id " + userId + " not found", HttpStatus.NOT_FOUND));
         String jwt = JWT.create()
                 .withExpiresAt(Date.from(Instant.now().plus(1L, ChronoUnit.HOURS)))
                 .withIssuer(jwtConfigProperties.getIss())
                 .withAudience(jwtConfigProperties.getAud())
-                .withSubject(email)
+                .withSubject(usernameProjection.getUsername())
                 .withClaim("id", userId)
                 .sign(Algorithm.HMAC256(jwtConfigProperties.getSecret()));
 

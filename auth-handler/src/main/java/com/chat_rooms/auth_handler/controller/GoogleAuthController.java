@@ -43,7 +43,7 @@ public class GoogleAuthController {
         Optional<UserInfo> user = userService.findUserByEmail(userInfo.getEmail());
         Long userId = user.isEmpty() ? userService.saveGoogleUserToDb(userInfo) : user.get().getId();
 
-        JWTResponse jwtResponse = tokenService.getJwtResponse(response, userInfo.getEmail(), userId);
+        JWTResponse jwtResponse = tokenService.getJwtResponse(response, userId);
 
         log.info("generateToken flow ended");
         return new ResponseEntity<>(jwtResponse, HttpStatus.OK);

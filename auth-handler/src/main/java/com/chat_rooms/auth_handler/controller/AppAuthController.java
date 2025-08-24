@@ -37,7 +37,7 @@ public class AppAuthController {
         log.info("registerUser flow started");
         long userId = userService.validateAndRegister(appUser);
 
-        JWTResponse jwtResponse = tokenService.getJwtResponse(response, appUser.getEmail(), userId);
+        JWTResponse jwtResponse = tokenService.getJwtResponse(response, userId);
 
         log.info("registerUser flow ended");
         return new ResponseEntity<>(jwtResponse, HttpStatus.CREATED);
@@ -50,7 +50,7 @@ public class AppAuthController {
         log.info("login flow started");
         long userId = userService.validateLoginUser(appUser);
 
-        JWTResponse jwtResponse = tokenService.getJwtResponse(response, appUser.getEmail(), userId);
+        JWTResponse jwtResponse = tokenService.getJwtResponse(response, userId);
         log.info("login flow ended");
 
         return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
@@ -90,9 +90,8 @@ public class AppAuthController {
         DecodedJWT decode = JWT.decode(authorization.substring(7));
         Claim id = decode.getClaim("id");
         if (tokenService.verifyRefreshTokenValidity(String.valueOf(id))) {
-            jwtResponse = tokenService.getJwtResponse(response, decode.getSubject(), id.asLong());
+            jwtResponse = tokenService.getJwtResponse(response, id.asLong());
         }
-
 
 
         log.info("refreshToken flow ended");

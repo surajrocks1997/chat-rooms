@@ -2,6 +2,7 @@ package com.chat_rooms.auth_handler.service;
 
 import com.chat_rooms.auth_handler.dto.AppUser;
 import com.chat_rooms.auth_handler.dto.GoogleUserInfo;
+import com.chat_rooms.auth_handler.dto.UserInfoUsernameProjection;
 import com.chat_rooms.auth_handler.entity.AuthProvider;
 import com.chat_rooms.auth_handler.entity.UserInfo;
 import com.chat_rooms.auth_handler.global.CustomException;
@@ -94,6 +95,10 @@ public class UserService {
 
     public Optional<UserInfo> findUserByEmail(String email) {
         return userInfoRepository.findByEmail(email);
+    }
+
+    public Optional<UserInfoUsernameProjection> findUsernameById(Long id) {
+        return userInfoRepository.findUsernameById(id);
     }
 
     public UserInfo findUserById(Long id) {
