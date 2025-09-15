@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class ChatRoomMessage {
+    private String correlationId;
     private MessageType messageType;
     private String username;
     private String userId;
