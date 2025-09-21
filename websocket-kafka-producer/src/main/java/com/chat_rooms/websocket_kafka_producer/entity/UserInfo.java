@@ -8,10 +8,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
-@Table(name = "UserInfo")
+@Table(name = "user_info", uniqueConstraints = {
+        @UniqueConstraint(name = "Email_Unique", columnNames = "email"),
+        @UniqueConstraint(name = "Username_Unique", columnNames = "username")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -20,7 +23,7 @@ public class UserInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
     @Column(nullable = false)
     private String firstName;
@@ -54,22 +57,22 @@ public class UserInfo {
     private String profilePictureUrl;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
         this.username = this.email.substring(0, email.indexOf('@'));
         if (this.authProvider == null) this.authProvider = AuthProvider.LOCAL.getValue();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
 }

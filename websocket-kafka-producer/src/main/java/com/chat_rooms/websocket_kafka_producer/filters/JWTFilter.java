@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Slf4j
 @Component
@@ -53,7 +53,7 @@ public class JWTFilter implements Filter {
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .errorMessage("JWTFilter Error : " + e.getMessage())
                     .correlationId(correlationId)
-                    .timeStamp(LocalDateTime.now().toString())
+                    .timeStamp(Instant.now().toString())
                     .build();
 
             res.setStatus(HttpStatus.UNAUTHORIZED.value());

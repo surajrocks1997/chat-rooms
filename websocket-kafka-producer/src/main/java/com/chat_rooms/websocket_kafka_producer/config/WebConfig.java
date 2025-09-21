@@ -20,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry
                 .addMapping("/**")
                 .allowedOrigins(env.getProperty("app.cors.allowed-origins"))
-                .allowedMethods("GET", "OPTIONS")
+                .allowedMethods("GET", "OPTIONS", "POST")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .exposedHeaders(
@@ -33,7 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
     public FilterRegistrationBean<JWTFilter> jwtFilterFilterRegistrationBean(JWTFilter jwtFilter) {
         FilterRegistrationBean<JWTFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(jwtFilter);
-        registrationBean.addUrlPatterns("/api/user/*");
+        registrationBean.addUrlPatterns("/api/*");
         return registrationBean;
     }
 }

@@ -21,7 +21,7 @@ public class AuthServerService {
 
     // takes full Bearer <TOKEN> as input
     public void validateToken(String bearerToken) {
-        String url = uriBuilderUtil.buildUrl(authServerApiUriBuilder, "/api/auth/validateToken", null);
+        String url = uriBuilderUtil.buildUrl(authServerApiUriBuilder, "/api/auth/local/validateToken", null);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", bearerToken);

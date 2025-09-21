@@ -20,7 +20,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
 //        ErrorResponse errorResponse = ErrorResponse.builder()
 //                .statusCode(HttpStatus.BAD_REQUEST.value())
 //                .errorMessage(ex.getMessage())
-//                .timeStamp(LocalDateTime.now().toString())
+//                .timeStamp(Instant.now().toString())
 //                .correlationId(Objects.requireNonNullElse(request.getHeader("x-correlation-id"), "some-correlation-id"))
 //                .build();
 //
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
                 .statusCode(ex.getStatus().value())
                 .errorMessage("Custom Error: " + ex.getMessage())
                 .correlationId(correlationId)
-                .timeStamp(LocalDateTime.now().toString())
+                .timeStamp(Instant.now().toString())
                 .build();
 
         loggingUtil.logException(ex, correlationId);
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .errorMessage("Database Error : " + ex.getMessage())
                 .correlationId(correlationId)
-                .timeStamp(LocalDateTime.now().toString())
+                .timeStamp(Instant.now().toString())
                 .build();
 
         loggingUtil.logException(ex, correlationId);
@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .errorMessage("Not Found Exception : " + ex.getMessage())
-                .timeStamp(LocalDateTime.now().toString())
+                .timeStamp(Instant.now().toString())
                 .correlationId(correlationId)
                 .build();
 
@@ -99,7 +99,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
                 .errorMessage("Method Not Supported Exception : " + ex.getMessage())
-                .timeStamp(LocalDateTime.now().toString())
+                .timeStamp(Instant.now().toString())
                 .correlationId(correlationId)
                 .build();
 
@@ -115,7 +115,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
                 .errorMessage("Media Type Not Supported Exception : " + ex.getMessage())
-                .timeStamp(LocalDateTime.now().toString())
+                .timeStamp(Instant.now().toString())
                 .correlationId(correlationId)
                 .build();
 
@@ -138,7 +138,7 @@ public class GlobalExceptionHandler {
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .errorMessage("Validation Exception : " + errorMessage)
                 .correlationId(correlationId)
-                .timeStamp(LocalDateTime.now().toString())
+                .timeStamp(Instant.now().toString())
                 .build();
 
         loggingUtil.logException(ex, correlationId);
@@ -167,7 +167,7 @@ public class GlobalExceptionHandler {
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .errorMessage("Generic Exception : " + ex.getMessage())
                 .correlationId(correlationId)
-                .timeStamp(LocalDateTime.now().toString())
+                .timeStamp(Instant.now().toString())
                 .build();
 
         loggingUtil.logException(ex, correlationId);
