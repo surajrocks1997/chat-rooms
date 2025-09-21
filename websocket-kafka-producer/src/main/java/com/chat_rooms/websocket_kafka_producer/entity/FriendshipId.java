@@ -2,11 +2,19 @@ package com.chat_rooms.websocket_kafka_producer.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Data
 public class FriendshipId implements Serializable {
 
     @Column(name = "userA")

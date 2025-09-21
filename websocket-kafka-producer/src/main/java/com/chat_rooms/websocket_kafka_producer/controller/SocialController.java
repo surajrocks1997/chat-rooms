@@ -30,6 +30,16 @@ public class SocialController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @PostMapping("friendship/accept/{id}")
+    public ResponseEntity<Void> acceptFriendRequest(@PathVariable(name = "id") Long requestId) {
+        log.info("SocialController : acceptFriendRequest flow started");
+
+        socialService.acceptFriendRequest(requestId);
+
+        log.info("SocialController : acceptFriendRequest flow ended");
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
     @GetMapping("/summary")
     public ResponseEntity<Map<Long, Map<String, Object>>> getSocialSummary(HttpServletRequest request) {
         log.info("FriendController: getSocialSummary flow started");
