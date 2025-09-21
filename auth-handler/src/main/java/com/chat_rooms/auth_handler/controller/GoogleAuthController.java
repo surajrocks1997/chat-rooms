@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/google/auth")
+@RequestMapping("/api/auth/google")
 @RequiredArgsConstructor
 @Slf4j
 public class GoogleAuthController {

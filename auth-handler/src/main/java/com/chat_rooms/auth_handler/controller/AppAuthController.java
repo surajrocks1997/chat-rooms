@@ -21,7 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/local")
 @Slf4j
 @RequiredArgsConstructor
 public class AppAuthController {
