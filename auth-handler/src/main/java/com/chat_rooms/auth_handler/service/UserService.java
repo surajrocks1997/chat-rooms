@@ -6,10 +6,12 @@ import com.chat_rooms.auth_handler.dto.UserInfoUsernameProjection;
 import com.chat_rooms.auth_handler.entity.AuthProvider;
 import com.chat_rooms.auth_handler.entity.UserInfo;
 import com.chat_rooms.auth_handler.global.CustomException;
-import com.chat_rooms.auth_handler.repository.UserInfoRepository;
+import com.chat_rooms.auth_handler.repository.jpa.UserInfoRepository;
 import com.chat_rooms.auth_handler.utils.PasswordUtils;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +40,7 @@ public class UserService {
                 .authProvider(AuthProvider.GOOGLE.getValue())
                 .isEmailVerified(googleUserInfo.isEmailVerified())
                 .isSocialLogin(true)
-                .profilePictureUrl(googleUserInfo.getProfilePictureUrl())
+//                .profilePictureUrl(googleUserInfo.getProfilePictureUrl())
                 .build();
 
         UserInfo savedUser = userInfoRepository.save(user);
@@ -126,6 +128,14 @@ public class UserService {
 
         log.info("validateLoginUser flow ended");
         return user.get().getId();
+    }
+
+    public void updateUserProfilePicture(Long userId, ObjectId gridFsObjectId) {
+        log.info("updateUserProfilePicture flow started");
+        UserInfo user = findUserById(userId);
+        user.setProfilePictureMongoId(gridFsObjectId.toHexString());
+        userInfoRepository.save(user);
+        log.info("updateUserProfilePicture flow ended");
     }
 }
 

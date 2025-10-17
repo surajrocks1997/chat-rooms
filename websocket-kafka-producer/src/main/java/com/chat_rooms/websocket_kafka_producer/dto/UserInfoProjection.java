@@ -12,5 +12,5 @@ public interface UserInfoProjection {
 
     String getUsername();
 
-    String getProfilePictureUrl();
+    String getProfilePictureMongoId();
 }

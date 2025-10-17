@@ -1,4 +1,4 @@
-package com.chat_rooms.auth_handler.repository;
+package com.chat_rooms.auth_handler.repository.jpa;
 
 import com.chat_rooms.auth_handler.dto.UserInfoUsernameProjection;
 import com.chat_rooms.auth_handler.entity.UserInfo;

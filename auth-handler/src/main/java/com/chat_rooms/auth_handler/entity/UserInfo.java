@@ -54,7 +54,8 @@ public class UserInfo {
     @Column(nullable = false)
     private boolean isSocialLogin;
 
-    private String profilePictureUrl;
+    @Column(name= "profile_picture_mongo_id", nullable = true)
+    private String profilePictureMongoId;
 
     @Column(nullable = false)
     private Instant createdAt;

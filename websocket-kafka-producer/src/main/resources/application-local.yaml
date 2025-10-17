@@ -15,6 +15,9 @@ spring:
     show-sql: true
     properties:
       format_sql: true
+  data:
+    mongodb:
+      uri: mongodb://root:root@localhost:27017/chat-room?authSource=admin
 
   redis:
     host: localhost
