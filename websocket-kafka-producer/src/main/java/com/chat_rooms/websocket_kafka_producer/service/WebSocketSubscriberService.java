@@ -16,8 +16,8 @@ public class WebSocketSubscriberService {
         this.messageTemplate.convertAndSend("/topic/chatRoom." + chatRoomName.getValue(), message);
     }
 
-//    public void sendToUser(PrivateChatMessage message){
-//        //        /user/{receiver}/queue/messages
-//        this.messageTemplate.convertAndSendToUser(message.getReceiver(), "/queue/messages", message);
-//    }
+    public void sendToUser(ChatRoomMessage message, String receiver) {
+        //        /user/{receiver}/queue/direct
+        this.messageTemplate.convertAndSendToUser(receiver, "/queue/direct", message);
+    }
 }

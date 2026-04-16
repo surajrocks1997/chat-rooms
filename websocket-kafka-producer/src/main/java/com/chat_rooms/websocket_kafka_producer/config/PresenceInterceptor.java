@@ -84,15 +84,23 @@ public class PresenceInterceptor implements ChannelInterceptor {
             case SUBSCRIBE:
                 log.info("preSend: SUBSCRIBE Command: Started");
                 String accessorSubscriptionId = accessor.getSubscriptionId();
-                eventPublisher.publishEvent(new RoomPresenceChangedEvent(accessorSubscriptionId, sessionId, true));
-                eventPublisher.publishEvent(new RedisSubscriberChangedEvent(accessorSubscriptionId, true));
+                if (accessorSubscriptionId.startsWith("chatRoom_")) {
+                    String roomId = accessorSubscriptionId.substring(9);
+                    log.info("Room Subscription Id: {}", roomId);
+                    eventPublisher.publishEvent(new RoomPresenceChangedEvent(roomId, sessionId, true));
+                    eventPublisher.publishEvent(new RedisSubscriberChangedEvent(roomId, true));
 
-                addPresenceWithSessionIdToChatRoomToRedis(sessionId, accessorSubscriptionId);
-                addPresenceWithChatRoomToSessionIdToRedis(accessorSubscriptionId, sessionId);
-
+                    addPresenceWithSessionIdToChatRoomToRedis(sessionId, roomId);
+                    addPresenceWithChatRoomToSessionIdToRedis(roomId, sessionId);
+                } else if (accessorSubscriptionId.startsWith("private_")) {
+                    String privateChatId = accessorSubscriptionId.substring(8);
+                    log.info("Private Subscription Id: {}", privateChatId);
+                }
 
                 log.info("From Presence Interceptor SUBSCRIBE Command. SessionId: {}, UserId: {}", sessionId, user != null ? user.getId() : "Anonymous");
                 log.info("preSend: SUBSCRIBE Command: Ended");
+
+
                 break;
 
             case UNSUBSCRIBE:

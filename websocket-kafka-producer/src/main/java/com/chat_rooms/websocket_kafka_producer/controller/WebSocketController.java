@@ -3,6 +3,7 @@ package com.chat_rooms.websocket_kafka_producer.controller;
 import com.chat_rooms.websocket_kafka_producer.dto.ChatRoomMessage;
 import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
 import com.chat_rooms.websocket_kafka_producer.service.KafkaProducerService;
+import com.chat_rooms.websocket_kafka_producer.service.WebSocketSubscriberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Controller;
 public class WebSocketController {
 
     private final KafkaProducerService kafkaProducerService;
+    private final WebSocketSubscriberService webSocketSubscriberService;
 
     @MessageMapping("/chatRoom/{chatRoomName}")
     public void getMessage(@Payload ChatRoomMessage message, @DestinationVariable String chatRoomName, SimpMessageHeaderAccessor headerAccessor) {
@@ -26,5 +28,12 @@ public class WebSocketController {
 
         kafkaProducerService.produceChatRoomMessage(message, "chat-room-topic-" + message.getChatRoomName().getValue());
         log.info("WebSocket Controller MessageMapping getMessage flow ended");
+    }
+
+    @MessageMapping("/privateMessage/{receiver}")
+    public void getPrivateMessage(@Payload ChatRoomMessage message, @DestinationVariable String receiver, SimpMessageHeaderAccessor headerAccessor){
+        log.info("WebSocketController : getPrivateMessage flow started");
+        webSocketSubscriberService.sendToUser(message, receiver);
+        log.info("WebSocketController : getPrivateMessage flow ended");
     }
 }
