@@ -6,6 +6,7 @@ import com.chat_rooms.websocket_kafka_producer.entity.UserInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
 
@@ -19,4 +20,5 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     List<FriendRequest> findBySenderAndStatus(UserInfo sender, FriendRequestStatus status);
     List<FriendRequest> findByReceiverAndStatus(UserInfo receiver, FriendRequestStatus status);
 
+    Optional<FriendRequest> findBySenderIdAndReceiverId(Long senderId, Long receiverId);
 }

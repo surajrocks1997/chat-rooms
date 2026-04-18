@@ -56,7 +56,7 @@ public class TokenService {
         return JWTResponse.builder()
                 .accessToken(jwt)
                 .tokenType("Bearer")
-                .expiresIn(Duration.of(1L, ChronoUnit.HOURS).toSeconds())
+                .expiresIn(Duration.of(8L, ChronoUnit.HOURS).toSeconds())
                 .build();
     }
 

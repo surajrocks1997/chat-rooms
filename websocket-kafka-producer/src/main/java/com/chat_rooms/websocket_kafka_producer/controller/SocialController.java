@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/social")
@@ -30,21 +31,22 @@ public class SocialController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PostMapping("friendship/accept/{id}")
-    public ResponseEntity<Void> acceptFriendRequest(@PathVariable(name = "id") Long requestId) {
+    @PostMapping("/friendship/accept/{id}")
+    public ResponseEntity<Void> acceptFriendRequest(HttpServletRequest request, @PathVariable(name = "id") Long senderId) {
         log.info("SocialController : acceptFriendRequest flow started");
 
-        socialService.acceptFriendRequest(requestId);
+        Long userId = (Long) request.getAttribute("claimId");
+        socialService.acceptFriendRequest(userId, senderId);
 
         log.info("SocialController : acceptFriendRequest flow ended");
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<Map<Long, Map<String, Object>>> getSocialSummary(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Set<Long>>> getFriendsStatus(HttpServletRequest request) {
         log.info("FriendController: getSocialSummary flow started");
         Long senderId = (Long) request.getAttribute("claimId");
-        Map<Long, Map<String, Object>> socialSummary = socialService.getSocialSummary(senderId);
+        Map<String, Set<Long>> socialSummary = socialService.getFriendStatus(senderId);
 
         log.info("FriendController: getSocialSummary flow ended");
         return new ResponseEntity<>(socialSummary, HttpStatus.OK);
