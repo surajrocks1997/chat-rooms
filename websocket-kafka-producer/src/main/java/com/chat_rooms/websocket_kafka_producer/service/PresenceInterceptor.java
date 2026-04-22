@@ -1,4 +1,4 @@
-package com.chat_rooms.websocket_kafka_producer.config;
+package com.chat_rooms.websocket_kafka_producer.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -7,9 +7,6 @@ import com.chat_rooms.websocket_kafka_producer.dto.RoomPresenceChangedEvent;
 import com.chat_rooms.websocket_kafka_producer.dto.UserMetadata;
 import com.chat_rooms.websocket_kafka_producer.eventListener.ServerInfoListener;
 import com.chat_rooms.websocket_kafka_producer.security.UserRoleDetails;
-import com.chat_rooms.websocket_kafka_producer.service.AuthServerService;
-import com.chat_rooms.websocket_kafka_producer.service.JsonRedisService;
-import com.chat_rooms.websocket_kafka_producer.service.RedisService;
 import com.chat_rooms.websocket_kafka_producer.utils.RedisKeys;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +37,9 @@ public class PresenceInterceptor implements ChannelInterceptor {
         UserRoleDetails user = (UserRoleDetails) accessor.getUser();
 
         switch (accessor.getCommand()) {
+            // validate token
+            // decode user and register user principal (UserRolesDetails)
+            // add present to redis - sessionID -> userMetaData (userId, username, userConnectedToServerHost)
             case CONNECT:
                 log.info("preSend: CONNECT Command: Started");
                 String bearerToken = accessor.getNativeHeader("Authorization") != null ? accessor.getNativeHeader("Authorization").getFirst() : null;
@@ -81,6 +81,12 @@ public class PresenceInterceptor implements ChannelInterceptor {
                 log.info("preSend: CONNECTED Command: Ended");
                 break;
 
+            // subscription can be done for either chatRoom or privateChat.
+            // if chatRoom,
+            //      send USER_ONLINE message to Kafka and start listener for that room if not already started
+            //      create a redis subscription for this room (listener)
+            //      add redis key to maintain sessionID to room for quick lookup when user disconnects or unsubscribes
+            //      add redis key to maintain  room to sessionId for quick lookup when user disconnects or unsubscribes
             case SUBSCRIBE:
                 log.info("preSend: SUBSCRIBE Command: Started");
                 String accessorSubscriptionId = accessor.getSubscriptionId();
@@ -103,6 +109,9 @@ public class PresenceInterceptor implements ChannelInterceptor {
 
                 break;
 
+            // remove redis key Room to SessionId
+            // if no more users in that room, stop the redis listener 0
+            // remove sessionId to room from redis
             case UNSUBSCRIBE:
                 log.info("preSend: UNSUBSCRIBE Command: Started");
 
@@ -112,6 +121,11 @@ public class PresenceInterceptor implements ChannelInterceptor {
                 log.info("preSend: UNSUBSCRIBE Command: Ended");
                 break;
 
+            // remove redis key Room to sessionId
+            // if no more users in that room, stop the redis listener
+            // remove session to room from redis
+            // remove sessionId to user metadata from redis
+            // remove userId to session fromr redis
             case DISCONNECT:
                 log.info("preSend: DISCONNECT Command: Started");
                 String room = redisService.get(RedisKeys.PRESENCE_SESSION_TO_ROOM + sessionId);
@@ -172,7 +186,7 @@ public class PresenceInterceptor implements ChannelInterceptor {
         jsonRedisService.delete(RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId);
     }
 
-    private void addPresenceWithSessionToUserMetadataToRedis(String sessionId, UserRoleDetails user) throws JsonProcessingException {
+    private void  addPresenceWithSessionToUserMetadataToRedis(String sessionId, UserRoleDetails user) throws JsonProcessingException {
         jsonRedisService.set(
                 RedisKeys.PRESENCE_SESSION_SESSIONID_TO_USERMETADATA + sessionId,
                 UserMetadata.builder()

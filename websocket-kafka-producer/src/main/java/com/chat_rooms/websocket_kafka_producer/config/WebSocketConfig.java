@@ -1,5 +1,6 @@
 package com.chat_rooms.websocket_kafka_producer.config;
 
+import com.chat_rooms.websocket_kafka_producer.service.PresenceInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
